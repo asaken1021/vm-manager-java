@@ -28,6 +28,7 @@ dependencies {
     implementation libs.guava
 
     implementation 'org.libvirt:libvirt:0.5.3'
+    implementation 'net.java.dev.jna:jna:5.15.0'
 }
 
 // Apply a specific Java toolchain to ease working on different environments.
