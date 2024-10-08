@@ -40,7 +40,7 @@ java {
 
 application {
     // Define the main class for the application.
-    mainClass = 'vm.manager.java.App'
+    mainClass = 'net.asaken1021.vmmanager.App'
 }
 
 tasks.named('test') {
@@ -51,7 +51,7 @@ tasks.named('test') {
 task fatJar(type: Jar) {
 
     manifest {
-        attributes 'Main-Class': "vm.manager.java.App"
+        attributes 'Main-Class': "net.asaken1021.vmmanager.App"
     }
 
     archiveBaseName = "${rootProject.name}"
