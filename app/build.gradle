@@ -13,6 +13,9 @@ plugins {
 repositories {
     // Use Maven Central for resolving dependencies.
     mavenCentral()
+    maven {
+        url = uri("https://download.libvirt.org/maven2")
+    }
 }
 
 dependencies {
@@ -23,6 +26,8 @@ dependencies {
 
     // This dependency is used by the application.
     implementation libs.guava
+
+    implementation 'org.libvirt:libvirt:0.5.3'
 }
 
 // Apply a specific Java toolchain to ease working on different environments.
