@@ -45,7 +45,6 @@ public class VMManager {
         try {
             DomainXMLBuilder builder = new DomainXMLBuilder(name, cpus, ram, disks, networkInterfaces);
             String xml = builder.buildXML();
-            System.out.println(xml);
             this.conn.domainDefineXML(xml);
 
             return new VMDomain(this.conn, name);
@@ -57,7 +56,6 @@ public class VMManager {
     }
 
     public VMDomain getVm(String name) throws LibvirtException {
-        System.out.println(this.conn.domainLookupByName(name).getXMLDesc(0));
         return new VMDomain(this.conn, name);
     }
 
