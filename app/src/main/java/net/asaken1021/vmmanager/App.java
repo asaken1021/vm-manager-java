@@ -43,7 +43,6 @@ public class App {
                     case 1:
                         System.out.print("VM Name > ");
                         vmName = scanner.next();
-                        System.out.println("\"" + vmName + "\"");
                         System.out.print("VM Cpus > ");
                         vmCpus = scanner.nextInt();
                         System.out.print("VM Ram Size (MiB) > ");
