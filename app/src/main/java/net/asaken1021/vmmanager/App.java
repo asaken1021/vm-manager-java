@@ -1,30 +1,100 @@
 package net.asaken1021.vmmanager;
 
-import org.libvirt.LibvirtException;
+import java.util.ArrayList;
+import java.util.Scanner;
+import java.util.List;
 
-import net.asaken1021.vmmanager.util.vmDomain;
-import net.asaken1021.vmmanager.util.vmManager;
-import net.asaken1021.vmmanager.util.vmRamUnit;
+import net.asaken1021.vmmanager.util.*;
+import net.asaken1021.vmmanager.util.networkinterface.InterfaceType;
 
 public class App {
-    public static void main(String[] args) throws LibvirtException {
-        vmManager vmm = new vmManager("qemu:///system");
+    public static void main(String[] args) {
+        try {
+            VMManager vmm = new VMManager("qemu:///system");
+            int select = 0;
+            Scanner scanner = new Scanner(System.in);
 
-        System.out.println("VM Count: " + vmm.getVmNames().length);
+            List<String> vmNames;
 
-        printLine();
+            String vmName;
+            int vmCpus;
+            long vmRam;
+            String vmDiskPath;
+            List<VMDisk> vmDisks = new ArrayList<VMDisk>();
+            List<VMNetworkInterface> vmNetworkInterfaces = new ArrayList<VMNetworkInterface>();
 
-        for (String vmName : vmm.getVmNames()) {
-            vmDomain dom = new vmDomain(vmm.getConnect(), vmName);
+            VMDomain domain;
 
-            System.out.println(
-                "Name: " + dom.getVmName() + "\n" +
-                "UUID: " + dom.getVmUUID().toString() + "\n" +
-                "State: " + dom.getVmStateString() + "\n" +
-                "vCPUs: " + dom.getVmCpus() + ", RAM: " + dom.getVmRamSize(vmRamUnit.RAM_MiB) + "MiB"
-            );
+            while (select >= 0) {
+                printLine();
 
-            printLine();
+                System.out.println("MENU");
+                System.out.println("Create VM    :  1");
+                System.out.println("Get VMs List :  2");
+                System.out.println("Get VM Info  :  3");
+                System.out.println("Delete VM    :  4");
+                System.out.println("Exit         : -1");
+                System.out.print("Select > ");
+                select = scanner.nextInt();
+
+                printLine();
+
+                switch (select) {
+                    case 1:
+                        System.out.print("VM Name > ");
+                        vmName = scanner.next();
+                        System.out.println("\"" + vmName + "\"");
+                        System.out.print("VM Cpus > ");
+                        vmCpus = scanner.nextInt();
+                        System.out.print("VM Ram Size (MiB) > ");
+                        vmRam = scanner.nextLong() * 1024;
+                        System.out.print("VM Disk path > ");
+                        vmDiskPath = scanner.next();
+                        vmDisks.add(new VMDisk("disk", "file", "qemu", "qcow2", vmDiskPath, "vda", "virtio"));
+                        vmNetworkInterfaces.add(new VMNetworkInterface(null, "virbr0", "virtio", InterfaceType.IF_BRIDGE));
+
+                        vmm.createVm(vmName, vmCpus, vmRam, vmDisks, vmNetworkInterfaces);
+                        break;
+                    case 2:
+                        vmNames = vmm.getVmNames();
+                        for (String name : vmNames) {
+                            System.out.println(name);
+                        }
+                        break;
+                    case 3:
+                        System.out.print("VM Name > ");
+                        vmName = scanner.next();
+                        domain = vmm.getVm(vmName);
+                        System.out.println("VM Name : " + domain.getVmName());
+                        System.out.println("vCPUs   : " + domain.getVmCpus());
+                        System.out.println("RAM(MiB): " + domain.getVmRamSize(VMRamUnit.RAM_MiB));
+                        System.out.println("Disks   : ");
+                        for (VMDisk disk : domain.getVmDisks()) {
+                            System.out.println("  Disk Path: " + disk.getSourceFile());
+                            System.out.println("  Disk Type: " + disk.getType());
+                        }
+                        System.out.println("Network :");
+                        for (VMNetworkInterface iface : domain.getVmNetworkInterfaces()) {
+                            System.out.println("  Interface Mac Address: " + iface.getMacAddress());
+                            System.out.println("  Interface Type       : " + iface.getInterfaceType().getText());
+                            System.out.println("  Interface Source     : " + iface.getSource());
+                        }
+                        break;
+                    case 4:
+                        System.out.print("VM Name > ");
+                        vmName = scanner.next();
+                        if (vmm.deleteVm(vmName)) {
+                            System.out.println("Deleted Successfully");
+                        } else {
+                            System.out.println("Failed to delete vm");
+                        }
+                        break;
+                }
+            }
+
+            scanner.close();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
