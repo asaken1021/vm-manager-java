@@ -24,6 +24,8 @@ import org.libvirt.LibvirtException;
 import org.w3c.dom.*;
 import org.xml.sax.InputSource;
 
+import net.asaken1021.vmmanager.util.xml.XMLType;
+
 public class VMDomain {
     private Connect conn;
     private Domain dom;
@@ -34,15 +36,6 @@ public class VMDomain {
     private long vmRam;
     private List<VMDisk> vmDisks;
     private List<VMNetworkInterface> vmNetworkInterfaces;
-
-    // public vmDomain(Connect conn, String name, int cpus, long ram, List<vmDisk> disks, List<vmNetworkInterface> networkInterfaces) throws LibvirtException {
-    //     this.conn = conn;
-    //     this.vmName = name;
-    //     this.vmCpus = cpus;
-    //     this.vmRam = ram;
-    //     this.vmDisks = disks;
-    //     this.vmNetworkInterfaces = networkInterfaces;
-    // }
 
     public VMDomain(Connect conn, String name) throws LibvirtException {
         this.conn = conn;
@@ -69,26 +62,14 @@ public class VMDomain {
     }
 
     private List<VMDisk> parseVmDisks(Domain dom) {
-        DocumentBuilderFactory factory;
-        DocumentBuilder builder;
-        Document document;
-        XPathFactory xPathFactory;
-        XPath xPath;
-        NodeList diskNodes;
-
+        List<String> vmDisksXML;
         List<VMDisk> vmDisks = new ArrayList<VMDisk>();
 
         try {
-            factory = DocumentBuilderFactory.newInstance();
-            builder = factory.newDocumentBuilder();
-            document = builder.parse(new InputSource(new StringReader(dom.getXMLDesc(0))));
+            vmDisksXML = parseXMLNodes(dom.getXMLDesc(0), XMLType.TYPE_DISK);
 
-            xPathFactory = XPathFactory.newInstance();
-            xPath = xPathFactory.newXPath();
-            diskNodes = (NodeList)xPath.evaluate("/domain/devices/disk", document, XPathConstants.NODESET);
-
-            for (int i = 0; i < diskNodes.getLength(); i++) {
-                vmDisks.add(new VMDisk(nodeToString(diskNodes.item(i))));
+            for (String vmDiskXML : vmDisksXML) {
+                vmDisks.add(new VMDisk(vmDiskXML));
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -98,32 +79,49 @@ public class VMDomain {
     }
 
     private List<VMNetworkInterface> parseVmNetworkInterfaces(Domain dom) {
-        DocumentBuilderFactory factory;
-        DocumentBuilder builder;
-        Document document;
-        XPathFactory xPathFactory;
-        XPath xPath;
-        NodeList interfaceNodes;
-
+        List<String> vmNetworkInterfacesXML;
         List<VMNetworkInterface> vmNetworkInterfaces = new ArrayList<VMNetworkInterface>();
 
         try {
-            factory = DocumentBuilderFactory.newInstance();
-            builder = factory.newDocumentBuilder();
-            document = builder.parse(new InputSource(new StringReader(dom.getXMLDesc(0))));
+            vmNetworkInterfacesXML = parseXMLNodes(dom.getXMLDesc(0), XMLType.TYPE_NETWORKINTERFACE);
 
-            xPathFactory = XPathFactory.newInstance();
-            xPath = xPathFactory.newXPath();
-            interfaceNodes = (NodeList)xPath.evaluate("/domain/devices/interface", document, XPathConstants.NODESET);
-
-            for (int i = 0; i < interfaceNodes.getLength(); i++) {
-                vmNetworkInterfaces.add(new VMNetworkInterface(nodeToString(interfaceNodes.item(i))));
+            for (String vmNetworkInterfaceXML : vmNetworkInterfacesXML) {
+                vmNetworkInterfaces.add(new VMNetworkInterface(vmNetworkInterfaceXML));
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
 
         return vmNetworkInterfaces;
+    }
+
+    private List<String> parseXMLNodes(String xmlDesc, XMLType xmlType) {
+        DocumentBuilderFactory factory;
+        DocumentBuilder builder;
+        Document document;
+        XPathFactory xPathFactory;
+        XPath xPath;
+        NodeList nodeList;
+
+        List<String> xmlNodes = new ArrayList<String>();
+
+        try {
+            factory = DocumentBuilderFactory.newInstance();
+            builder = factory.newDocumentBuilder();
+            document = builder.parse(new InputSource(new StringReader(xmlDesc)));
+
+            xPathFactory = XPathFactory.newInstance();
+            xPath = xPathFactory.newXPath();
+            nodeList = (NodeList)xPath.evaluate(xmlType.getXPath(), document, XPathConstants.NODESET);
+
+            for (int i = 0; i < nodeList.getLength(); i++) {
+                xmlNodes.add(nodeToString(nodeList.item(i)));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return xmlNodes;
     }
 
     private String nodeToString(Node node) {
