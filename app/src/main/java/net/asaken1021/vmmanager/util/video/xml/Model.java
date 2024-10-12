@@ -9,6 +9,9 @@ public class Model {
     @XmlAttribute(name="type")
     private String type;
 
+    @XmlAttribute(name="vram")
+    private int vram;
+
     @XmlAttribute(name="heads")
     private int heads;
 
@@ -21,6 +24,14 @@ public class Model {
     
     public void setType(String type) {
         this.type = type;
+    }
+
+    public int getVram() {
+        return this.vram;
+    }
+
+    public void setVram(int vram) {
+        this.vram = vram;
     }
     
     public int getHeads() {

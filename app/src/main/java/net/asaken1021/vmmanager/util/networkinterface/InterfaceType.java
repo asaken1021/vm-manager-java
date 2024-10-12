@@ -20,6 +20,7 @@ public enum InterfaceType {
         } else if (type.equals(InterfaceType.IF_BRIDGE.getText())) {
             return InterfaceType.IF_BRIDGE;
         }
+        
         return null;
     }
 }

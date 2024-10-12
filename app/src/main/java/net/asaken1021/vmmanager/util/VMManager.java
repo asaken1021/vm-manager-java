@@ -41,9 +41,9 @@ public class VMManager {
         return vmNames;
     }
 
-    public VMDomain createVm(String name, int cpus, long ram, List<VMDisk> disks, List<VMNetworkInterface> networkInterfaces) {
+    public VMDomain createVm(String name, int cpus, long ram, List<VMDisk> disks, List<VMNetworkInterface> networkInterfaces, VMVideo video) {
         try {
-            DomainXMLBuilder builder = new DomainXMLBuilder(name, cpus, ram, disks, networkInterfaces);
+            DomainXMLBuilder builder = new DomainXMLBuilder(name, cpus, ram, disks, networkInterfaces, video);
             String xml = builder.buildXML();
             this.conn.domainDefineXML(xml);
 

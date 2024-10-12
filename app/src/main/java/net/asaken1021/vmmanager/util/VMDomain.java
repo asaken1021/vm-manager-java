@@ -36,29 +36,29 @@ public class VMDomain {
     private long vmRam;
     private List<VMDisk> vmDisks;
     private List<VMNetworkInterface> vmNetworkInterfaces;
+    private VMVideo vmVideo;
 
     public VMDomain(Connect conn, String name) throws LibvirtException {
         this.conn = conn;
         this.dom = this.conn.domainLookupByName(name);
-        this.domInfo = this.dom.getInfo();
-
-        this.vmName = this.dom.getName();
-        this.vmCpus = this.domInfo.nrVirtCpu;
-        this.vmRam = this.domInfo.maxMem;
-        this.vmDisks = parseVmDisks(this.dom);
-        this.vmNetworkInterfaces = parseVmNetworkInterfaces(this.dom);
+        initData(this.dom);
     }
 
     public VMDomain(Connect conn, UUID uuid) throws LibvirtException {
         this.conn = conn;
         this.dom = this.conn.domainLookupByUUID(uuid);
-        this.domInfo = this.dom.getInfo();
+        initData(this.dom);
+    }
 
-        this.vmName = this.dom.getName();
+    private void initData(Domain dom) throws LibvirtException {
+        this.domInfo = dom.getInfo();
+
+        this.vmName = dom.getName();
         this.vmCpus = this.domInfo.nrVirtCpu;
         this.vmRam = this.domInfo.maxMem;
-        this.vmDisks = parseVmDisks(this.dom);
-        this.vmNetworkInterfaces = parseVmNetworkInterfaces(this.dom);
+        this.vmDisks = parseVmDisks(dom);
+        this.vmNetworkInterfaces = parseVmNetworkInterfaces(dom);
+        this.vmVideo = parseVmVideo(dom);
     }
 
     private List<VMDisk> parseVmDisks(Domain dom) {
@@ -93,6 +93,26 @@ public class VMDomain {
         }
 
         return vmNetworkInterfaces;
+    }
+
+    private VMVideo parseVmVideo(Domain dom) {
+        List<String> vmVideoXML;
+        VMVideo vmVideo;
+
+        try {
+            vmVideoXML = parseXMLNodes(dom.getXMLDesc(0), XMLType.TYPE_VIDEO);
+
+            if (vmVideoXML.size() != 1) {
+                return null;
+            } else {
+                vmVideo = new VMVideo(vmVideoXML.get(0));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+
+        return vmVideo;
     }
 
     private List<String> parseXMLNodes(String xmlDesc, XMLType xmlType) {
@@ -204,5 +224,9 @@ public class VMDomain {
     }
     public List<VMNetworkInterface> getVmNetworkInterfaces() {
         return this.vmNetworkInterfaces;
+    }
+
+    public VMVideo getVmVideo() {
+        return this.vmVideo;
     }
 }

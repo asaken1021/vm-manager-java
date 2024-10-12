@@ -6,6 +6,7 @@ import java.util.List;
 
 import net.asaken1021.vmmanager.util.*;
 import net.asaken1021.vmmanager.util.networkinterface.InterfaceType;
+import net.asaken1021.vmmanager.util.video.VideoType;
 
 public class App {
     public static void main(String[] args) {
@@ -22,6 +23,7 @@ public class App {
             String vmDiskPath;
             List<VMDisk> vmDisks = new ArrayList<VMDisk>();
             List<VMNetworkInterface> vmNetworkInterfaces = new ArrayList<VMNetworkInterface>();
+            VMVideo vmVideo;
 
             VMDomain domain;
 
@@ -51,8 +53,9 @@ public class App {
                         vmDiskPath = scanner.next();
                         vmDisks.add(new VMDisk("disk", "file", "qemu", "qcow2", vmDiskPath, "vda", "virtio"));
                         vmNetworkInterfaces.add(new VMNetworkInterface(null, "virbr0", "virtio", InterfaceType.IF_BRIDGE));
+                        vmVideo = new VMVideo(VideoType.VIDEO_VIRTIO);
 
-                        vmm.createVm(vmName, vmCpus, vmRam, vmDisks, vmNetworkInterfaces);
+                        vmm.createVm(vmName, vmCpus, vmRam, vmDisks, vmNetworkInterfaces, vmVideo);
                         break;
                     case 2:
                         vmNames = vmm.getVmNames();
@@ -78,6 +81,8 @@ public class App {
                             System.out.println("  Interface Type       : " + iface.getInterfaceType().getText());
                             System.out.println("  Interface Source     : " + iface.getSource());
                         }
+                        System.out.println("Video   :");
+                        System.out.println("  Video Type: " + domain.getVmVideo().getType().getText());
                         break;
                     case 4:
                         System.out.print("VM Name > ");
