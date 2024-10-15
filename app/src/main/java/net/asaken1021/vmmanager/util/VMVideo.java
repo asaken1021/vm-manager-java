@@ -11,25 +11,20 @@ public class VMVideo {
     private int vram;
 
     public VMVideo(VideoType videoType) {
-        if (videoType.equals(VideoType.VIDEO_VIRTIO)) {
-            this.videoType = videoType;
-        }
+        this.videoType = videoType;
+        this.vram = 16384;
     }
 
     public VMVideo(VideoType videoType, int vram) {
-        if (videoType.equals(VideoType.VIDEO_VGA)) {
-            this.videoType = videoType;
-            this.vram = vram;
-        }
+        this.videoType = videoType;
+        this.vram = vram;
     }
 
     public VMVideo(String xmlDesc) throws JAXBException {
         VideoXML videoXML = new DomainXMLParser(xmlDesc, XMLType.TYPE_VIDEO).parseVideoXML();
 
         this.videoType = VideoType.getTypeByString(videoXML.getModel().getType());
-        if (this.videoType.equals(VideoType.VIDEO_VGA)) {
-            this.vram = videoXML.getModel().getVram();
-        }
+        this.vram = videoXML.getModel().getVram();
     }
 
     public VideoType getType() {
@@ -41,16 +36,10 @@ public class VMVideo {
     }
 
     public int getVram() {
-        if (this.videoType.equals(VideoType.VIDEO_VGA)) {
-            return this.vram;
-        }
-
-        return 0;
+        return this.vram;
     }
 
     public void setVram(int vram) {
-        if (this.videoType.equals(VideoType.VIDEO_VGA)) {
-            this.vram = vram;
-        }
+        this.vram = vram;
     }
 }

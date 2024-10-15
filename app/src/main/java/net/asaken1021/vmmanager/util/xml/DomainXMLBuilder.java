@@ -22,7 +22,6 @@ import org.w3c.dom.Element;
 import net.asaken1021.vmmanager.util.VMDisk;
 import net.asaken1021.vmmanager.util.VMNetworkInterface;
 import net.asaken1021.vmmanager.util.VMVideo;
-import net.asaken1021.vmmanager.util.video.VideoType;
 
 public class DomainXMLBuilder {
     private String vmName;
@@ -157,11 +156,7 @@ public class DomainXMLBuilder {
         Element video = this.document.createElement("video");
         Element videoModel = this.document.createElement("model");
         videoModel.setAttribute("type", vmVideo.getType().getText());
-
-        if (vmVideo.getType().equals(VideoType.VIDEO_VGA)) {
-            videoModel.setAttribute("vram", String.valueOf(vmVideo.getVram()));
-        }
-
+        videoModel.setAttribute("vram", String.valueOf(vmVideo.getVram()));
         videoModel.setAttribute("heads", "1");
         videoModel.setAttribute("primary", "yes");
         video.appendChild(videoModel);
