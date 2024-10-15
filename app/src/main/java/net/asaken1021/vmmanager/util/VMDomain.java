@@ -36,6 +36,7 @@ public class VMDomain {
     private long vmRam;
     private List<VMDisk> vmDisks;
     private List<VMNetworkInterface> vmNetworkInterfaces;
+    private VMGraphics vmGraphics;
     private VMVideo vmVideo;
 
     public VMDomain(Connect conn, String name) throws LibvirtException {
@@ -58,6 +59,7 @@ public class VMDomain {
         this.vmRam = this.domInfo.maxMem;
         this.vmDisks = parseVmDisks(dom);
         this.vmNetworkInterfaces = parseVmNetworkInterfaces(dom);
+        this.vmGraphics = parseVmGraphics(dom);
         this.vmVideo = parseVmVideo(dom);
     }
 
@@ -93,6 +95,26 @@ public class VMDomain {
         }
 
         return vmNetworkInterfaces;
+    }
+
+    private VMGraphics parseVmGraphics(Domain dom) {
+        List<String> vmGraphicsXML;
+        VMGraphics vmGraphics;
+
+        try {
+            vmGraphicsXML = parseXMLNodes(dom.getXMLDesc(0), XMLType.TYPE_GRAPHICS);
+
+            if (vmGraphicsXML.size() != 1) {
+                return null;
+            } else {
+                vmGraphics = new VMGraphics(vmGraphicsXML.get(0));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+
+        return vmGraphics;
     }
 
     private VMVideo parseVmVideo(Domain dom) {
@@ -224,6 +246,10 @@ public class VMDomain {
     }
     public List<VMNetworkInterface> getVmNetworkInterfaces() {
         return this.vmNetworkInterfaces;
+    }
+
+    public VMGraphics getVmGraphics() {
+        return this.vmGraphics;
     }
 
     public VMVideo getVmVideo() {

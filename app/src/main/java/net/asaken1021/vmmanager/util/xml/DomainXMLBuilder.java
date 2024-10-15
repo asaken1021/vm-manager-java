@@ -20,6 +20,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 import net.asaken1021.vmmanager.util.VMDisk;
+import net.asaken1021.vmmanager.util.VMGraphics;
 import net.asaken1021.vmmanager.util.VMNetworkInterface;
 import net.asaken1021.vmmanager.util.VMVideo;
 
@@ -29,6 +30,7 @@ public class DomainXMLBuilder {
     private long vmRam;
     private List<VMDisk> vmDisks;
     private List<VMNetworkInterface> vmNetworkInterfaces;
+    private VMGraphics vmGraphics;
     private VMVideo vmVideo;
 
     private DocumentBuilderFactory factory;
@@ -38,12 +40,14 @@ public class DomainXMLBuilder {
     private Transformer transformer;
 
     public DomainXMLBuilder(String vmName, int vmCpus, long vmRam, List<VMDisk> vmDisks,
-    List<VMNetworkInterface> vmNetworkInterfaces, VMVideo vmVideo) throws ParserConfigurationException, TransformerConfigurationException {
+    List<VMNetworkInterface> vmNetworkInterfaces, VMGraphics vmGraphics, VMVideo vmVideo)
+    throws ParserConfigurationException, TransformerConfigurationException {
         this.vmName = vmName;
         this.vmCpus = vmCpus;
         this.vmRam = vmRam;
         this.vmDisks = new ArrayList<VMDisk>(vmDisks);
         this.vmNetworkInterfaces = new ArrayList<VMNetworkInterface>(vmNetworkInterfaces);
+        this.vmGraphics = vmGraphics;
         this.vmVideo = vmVideo;
 
         this.factory = DocumentBuilderFactory.newInstance();
@@ -152,6 +156,17 @@ public class DomainXMLBuilder {
 
             devices.appendChild(netinterface);
         }
+
+        Element graphics = this.document.createElement("graphics");
+        Element graphicsListen = this.document.createElement("listen");
+        graphics.setAttribute("type", vmGraphics.getGraphicsType());
+        graphics.setAttribute("port", String.valueOf(vmGraphics.getPort()));
+        graphics.setAttribute("autoport", "yes");
+        graphics.setAttribute("listen", vmGraphics.getAddress());
+        graphicsListen.setAttribute("type", vmGraphics.getListenType());
+        graphicsListen.setAttribute("address", vmGraphics.getAddress());
+        graphics.appendChild(graphicsListen);
+        devices.appendChild(graphics);
 
         Element video = this.document.createElement("video");
         Element videoModel = this.document.createElement("model");

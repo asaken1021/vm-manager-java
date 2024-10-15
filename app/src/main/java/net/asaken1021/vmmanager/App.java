@@ -23,6 +23,7 @@ public class App {
             String vmDiskPath;
             List<VMDisk> vmDisks = new ArrayList<VMDisk>();
             List<VMNetworkInterface> vmNetworkInterfaces = new ArrayList<VMNetworkInterface>();
+            VMGraphics vmGraphics;
             VMVideo vmVideo;
 
             VMDomain domain;
@@ -54,8 +55,8 @@ public class App {
                         vmDisks.add(new VMDisk("disk", "file", "qemu", "qcow2", vmDiskPath, "vda", "virtio"));
                         vmNetworkInterfaces.add(new VMNetworkInterface(null, "virbr0", "virtio", InterfaceType.IF_BRIDGE));
                         vmVideo = new VMVideo(VideoType.VIDEO_VIRTIO);
-
-                        vmm.createVm(vmName, vmCpus, vmRam, vmDisks, vmNetworkInterfaces, vmVideo);
+                        vmGraphics = new VMGraphics("vnc", -1);
+                        vmm.createVm(vmName, vmCpus, vmRam, vmDisks, vmNetworkInterfaces, vmGraphics, vmVideo);
                         break;
                     case 2:
                         vmNames = vmm.getVmNames();
@@ -81,6 +82,8 @@ public class App {
                             System.out.println("  Interface Type       : " + iface.getInterfaceType().getText());
                             System.out.println("  Interface Source     : " + iface.getSource());
                         }
+                        System.out.println("Graphics:");
+                        System.out.println("  Graphics Type: " + domain.getVmGraphics().getGraphicsType());
                         System.out.println("Video   :");
                         System.out.println("  Video Type: " + domain.getVmVideo().getType().getText());
                         break;
