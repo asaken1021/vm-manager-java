@@ -1,10 +1,11 @@
-package net.asaken1021.vmmanager.util.graphics.xml;
+package net.asaken1021.vmmanager.util.vm.graphics;
 
 import jakarta.xml.bind.annotation.XmlAccessType;
 import jakarta.xml.bind.annotation.XmlAccessorType;
 import jakarta.xml.bind.annotation.XmlAttribute;
 import jakarta.xml.bind.annotation.XmlElement;
 import jakarta.xml.bind.annotation.XmlRootElement;
+import net.asaken1021.vmmanager.util.vm.graphics.xml.Listen;
 
 @XmlRootElement(name="graphics")
 @XmlAccessorType(XmlAccessType.FIELD)

@@ -5,8 +5,8 @@ import java.util.Scanner;
 import java.util.List;
 
 import net.asaken1021.vmmanager.util.*;
-import net.asaken1021.vmmanager.util.networkinterface.InterfaceType;
-import net.asaken1021.vmmanager.util.video.VideoType;
+import net.asaken1021.vmmanager.util.vm.networkinterface.InterfaceType;
+import net.asaken1021.vmmanager.util.vm.video.VideoType;
 
 public class App {
     public static void main(String[] args) {

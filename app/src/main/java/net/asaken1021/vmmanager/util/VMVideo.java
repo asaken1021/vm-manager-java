@@ -1,8 +1,8 @@
 package net.asaken1021.vmmanager.util;
 
 import jakarta.xml.bind.JAXBException;
-import net.asaken1021.vmmanager.util.video.VideoType;
-import net.asaken1021.vmmanager.util.video.xml.VideoXML;
+import net.asaken1021.vmmanager.util.vm.video.VideoType;
+import net.asaken1021.vmmanager.util.vm.video.VideoXML;
 import net.asaken1021.vmmanager.util.xml.DomainXMLParser;
 import net.asaken1021.vmmanager.util.xml.XMLType;
 

@@ -5,11 +5,10 @@ import java.io.StringReader;
 import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBException;
 import jakarta.xml.bind.Unmarshaller;
-
-import net.asaken1021.vmmanager.util.disk.xml.DiskXML;
-import net.asaken1021.vmmanager.util.graphics.xml.GraphicsXML;
-import net.asaken1021.vmmanager.util.networkinterface.xml.NetworkInterfaceXML;
-import net.asaken1021.vmmanager.util.video.xml.VideoXML;
+import net.asaken1021.vmmanager.util.vm.disk.DiskXML;
+import net.asaken1021.vmmanager.util.vm.graphics.GraphicsXML;
+import net.asaken1021.vmmanager.util.vm.networkinterface.NetworkInterfaceXML;
+import net.asaken1021.vmmanager.util.vm.video.VideoXML;
 
 public class DomainXMLParser {
     private String xmlDesc;

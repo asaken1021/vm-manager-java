@@ -1,4 +1,4 @@
-package net.asaken1021.vmmanager.util.networkinterface.xml;
+package net.asaken1021.vmmanager.util.vm.networkinterface.xml;
 
 import jakarta.xml.bind.annotation.XmlAccessType;
 import jakarta.xml.bind.annotation.XmlAccessorType;

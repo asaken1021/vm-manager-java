@@ -1,6 +1,10 @@
-package net.asaken1021.vmmanager.util.disk.xml;
+package net.asaken1021.vmmanager.util.vm.disk;
 
 import jakarta.xml.bind.annotation.*;
+import net.asaken1021.vmmanager.util.vm.disk.xml.Driver;
+import net.asaken1021.vmmanager.util.vm.disk.xml.ReadOnly;
+import net.asaken1021.vmmanager.util.vm.disk.xml.Source;
+import net.asaken1021.vmmanager.util.vm.disk.xml.Target;
 
 @XmlRootElement(name="disk")
 @XmlAccessorType(XmlAccessType.FIELD)

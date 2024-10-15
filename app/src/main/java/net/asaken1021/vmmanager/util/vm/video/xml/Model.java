@@ -1,4 +1,4 @@
-package net.asaken1021.vmmanager.util.video.xml;
+package net.asaken1021.vmmanager.util.vm.video.xml;
 
 import jakarta.xml.bind.annotation.XmlAccessType;
 import jakarta.xml.bind.annotation.XmlAccessorType;

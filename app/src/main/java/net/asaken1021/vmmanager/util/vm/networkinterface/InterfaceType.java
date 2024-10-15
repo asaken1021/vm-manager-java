@@ -1,4 +1,4 @@
-package net.asaken1021.vmmanager.util.networkinterface;
+package net.asaken1021.vmmanager.util.vm.networkinterface;
 
 public enum InterfaceType {
     IF_NETWORK("network"),

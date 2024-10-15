@@ -1,4 +1,4 @@
-package net.asaken1021.vmmanager.util.video;
+package net.asaken1021.vmmanager.util.vm.video;
 
 public enum VideoType {
     VIDEO_VIRTIO("virtio"),

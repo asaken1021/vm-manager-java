@@ -1,7 +1,7 @@
 package net.asaken1021.vmmanager.util;
 
 import jakarta.xml.bind.JAXBException;
-import net.asaken1021.vmmanager.util.graphics.xml.GraphicsXML;
+import net.asaken1021.vmmanager.util.vm.graphics.GraphicsXML;
 import net.asaken1021.vmmanager.util.xml.DomainXMLParser;
 import net.asaken1021.vmmanager.util.xml.XMLType;
 
