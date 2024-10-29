@@ -2,6 +2,7 @@ package net.asaken1021.vmmanager.util;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
@@ -73,6 +74,10 @@ public class VMManager {
 
     public VMDomain getVm(String name) throws DomainLookupException {
         return new VMDomain(this.conn, name);
+    }
+
+    public VMDomain getVm(UUID uuid) throws DomainLookupException {
+        return new VMDomain(this.conn, uuid);
     }
 
     public void deleteVm(String name) throws DomainDeleteException {
