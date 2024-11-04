@@ -131,6 +131,16 @@ public class WebApiApp {
         }
         vm.put("interfaces", nestedDatas);
 
+        nestedDatas = new ArrayList<Map<String, String>>();
+        for (String address : vmDomain.getInterfaceAddresses()) {
+            nestedData = new LinkedHashMap<String, String>();
+
+            nestedData.put("address", address);
+
+            nestedDatas.add(nestedData);
+        }
+        vm.put("addresses", nestedDatas);
+
         data.put("vm", vm);
 
         return data;

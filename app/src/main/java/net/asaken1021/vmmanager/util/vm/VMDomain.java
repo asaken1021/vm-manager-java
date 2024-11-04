@@ -24,6 +24,7 @@ import javax.xml.xpath.XPathFactory;
 import org.libvirt.Connect;
 import org.libvirt.Domain;
 import org.libvirt.DomainInfo;
+import org.libvirt.DomainInterface;
 import org.libvirt.LibvirtException;
 import org.w3c.dom.*;
 import org.xml.sax.InputSource;
@@ -269,7 +270,7 @@ public class VMDomain {
 
     public List<VMDisk> getVmDisks() {
         return this.vmDisks;
-    }
+    }   
     public List<VMNetworkInterface> getVmNetworkInterfaces() {
         return this.vmNetworkInterfaces;
     }
@@ -280,5 +281,28 @@ public class VMDomain {
 
     public VMVideo getVmVideo() {
         return this.vmVideo;
+    }
+
+    public List<String> getInterfaceAddresses() {
+        List<String> addresses = new ArrayList<String>();
+        List<DomainInterface> domainInterfaces = new ArrayList<DomainInterface>();
+
+        if (getVmNetworkInterfaces().size() == 0) {
+            return addresses;
+        }
+
+        try {
+            domainInterfaces = new ArrayList<DomainInterface>(this.dom.interfaceAddresses(Domain.InterfaceAddressesSource.VIR_DOMAIN_INTERFACE_ADDRESSES_SRC_ARP, 0));
+        } catch (LibvirtException e) {
+            return addresses;
+        }
+
+        for (DomainInterface domainInterface : domainInterfaces) {
+            for (DomainInterface.InterfaceAddress ifaceAddress : domainInterface.addrs) {
+                addresses.add(ifaceAddress.address.getHostAddress());
+            }
+        }
+
+        return addresses;
     }
 }
