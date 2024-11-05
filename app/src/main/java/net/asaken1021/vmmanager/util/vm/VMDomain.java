@@ -41,7 +41,7 @@ public class VMDomain {
     private Connect conn;
     private Domain dom;
     private DomainInfo domInfo;
-    
+
     private String vmName;
     private int vmCpus;
     private long vmRam;
@@ -89,7 +89,7 @@ public class VMDomain {
             for (String vmDiskXML : parseXMLNodes(dom.getXMLDesc(0), XMLType.TYPE_DISK)) {
                 vmDisks.add(new VMDisk(vmDiskXML));
             }
-        } catch (LibvirtException | JAXBException | FileNotFoundException e ) {
+        } catch (LibvirtException | JAXBException | FileNotFoundException e) {
             throw new XMLParserException(e);
         }
 
@@ -171,7 +171,7 @@ public class VMDomain {
         xPath = xPathFactory.newXPath();
 
         try {
-            nodeList = (NodeList)xPath.evaluate(xmlType.getXPath(), document, XPathConstants.NODESET);
+            nodeList = (NodeList) xPath.evaluate(xmlType.getXPath(), document, XPathConstants.NODESET);
 
             for (int i = 0; i < nodeList.getLength(); i++) {
                 xmlNodes.add(nodeToString(nodeList.item(i)));
@@ -214,6 +214,21 @@ public class VMDomain {
 
     private DomainInfo.DomainState getVmState() {
         return this.domInfo.state;
+    }
+
+    private List<DomainInterface> getDomainInterfaces() {
+        List<DomainInterface> domainInterfaces = new ArrayList<DomainInterface>();
+
+        try {
+            domainInterfaces = new ArrayList<DomainInterface>(this.dom
+                    .interfaceAddresses(Domain.InterfaceAddressesSource.VIR_DOMAIN_INTERFACE_ADDRESSES_SRC_ARP, 0));
+            domainInterfaces = new ArrayList<DomainInterface>(this.dom
+                    .interfaceAddresses(Domain.InterfaceAddressesSource.VIR_DOMAIN_INTERFACE_ADDRESSES_SRC_AGENT, 0));
+
+            return domainInterfaces;
+        } catch (LibvirtException e) {
+            return domainInterfaces;
+        }
     }
 
     public void startVm() throws LibvirtException {
@@ -270,7 +285,8 @@ public class VMDomain {
 
     public List<VMDisk> getVmDisks() {
         return this.vmDisks;
-    }   
+    }
+
     public List<VMNetworkInterface> getVmNetworkInterfaces() {
         return this.vmNetworkInterfaces;
     }
@@ -283,23 +299,19 @@ public class VMDomain {
         return this.vmVideo;
     }
 
-    public List<String> getInterfaceAddresses() {
+    public List<String> getInterfaceAddresses(String macAddress) {
         List<String> addresses = new ArrayList<String>();
-        List<DomainInterface> domainInterfaces = new ArrayList<DomainInterface>();
+        List<DomainInterface> domainInterfaces = getDomainInterfaces();
 
-        if (getVmNetworkInterfaces().size() == 0) {
-            return addresses;
-        }
-
-        try {
-            domainInterfaces = new ArrayList<DomainInterface>(this.dom.interfaceAddresses(Domain.InterfaceAddressesSource.VIR_DOMAIN_INTERFACE_ADDRESSES_SRC_ARP, 0));
-        } catch (LibvirtException e) {
+        if (domainInterfaces.size() == 0) {
             return addresses;
         }
 
         for (DomainInterface domainInterface : domainInterfaces) {
-            for (DomainInterface.InterfaceAddress ifaceAddress : domainInterface.addrs) {
-                addresses.add(ifaceAddress.address.getHostAddress());
+            if (domainInterface.hwAddr.equals(macAddress)) {
+                for (DomainInterface.InterfaceAddress ifaceAddress : domainInterface.addrs) {
+                    addresses.add(ifaceAddress.address.getHostAddress());
+                }
             }
         }
 

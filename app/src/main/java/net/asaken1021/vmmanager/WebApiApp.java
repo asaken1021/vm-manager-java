@@ -64,12 +64,12 @@ public class WebApiApp {
     @JSON
     public Map<String, Object> getVms() {
         Map<String, Object> data = new HashMap<String, Object>();
-        List<Map<String, String>> vms = new ArrayList<Map<String, String>>();
-        Map<String, String> vm = new LinkedHashMap<String, String>();
+        List<Map<String, Object>> vms = new ArrayList<Map<String, Object>>();
+        Map<String, Object> vm = new LinkedHashMap<String, Object>();
 
         try {
             for (String name : this.vmm.getVmNames()) {
-                vm = new HashMap<String, String>();
+                vm = new HashMap<String, Object>();
                 vm.put("uuid", this.vmm.getVm(name).getVmUUID().toString());
                 vm.put("name", name);
                 vms.add(vm);
@@ -87,8 +87,8 @@ public class WebApiApp {
     public Map<String, Object> getVmByUUID(String uuid) {
         Map<String, Object> data = new HashMap<String, Object>();
         Map<String, Object> vm = new LinkedHashMap<String, Object>();
-        List<Map<String, String>> nestedDatas = new ArrayList<Map<String, String>>();
-        Map<String, String> nestedData = new LinkedHashMap<String, String>();
+        List<Map<String, Object>> nestedDatas = new ArrayList<Map<String, Object>>();
+        Map<String, Object> nestedData = new LinkedHashMap<String, Object>();
         VMDomain vmDomain;
 
         try {
@@ -105,9 +105,9 @@ public class WebApiApp {
         vm.put("ram", vmDomain.getVmRamSize(VMRamUnit.RAM_MiB));
         vm.put("ram_unit", VMRamUnit.RAM_MiB.getUnitText());
 
-        nestedDatas = new ArrayList<Map<String, String>>();
+        nestedDatas = new ArrayList<Map<String, Object>>();
         for (VMDisk disk : vmDomain.getVmDisks()) {
-            nestedData = new LinkedHashMap<String, String>();
+            nestedData = new LinkedHashMap<String, Object>();
 
             nestedData.put("file_path", disk.getSourceFile());
             nestedData.put("device", disk.getDevice());
@@ -118,28 +118,19 @@ public class WebApiApp {
         }
         vm.put("disks", nestedDatas);
 
-        nestedDatas = new ArrayList<Map<String, String>>();
+        nestedDatas = new ArrayList<Map<String, Object>>();
         for (VMNetworkInterface iface : vmDomain.getVmNetworkInterfaces()) {
-            nestedData = new LinkedHashMap<String, String>();
+            nestedData = new LinkedHashMap<String, Object>();
 
             nestedData.put("mac_address", iface.getMacAddress());
             nestedData.put("type", iface.getInterfaceType().getTypeText());
             nestedData.put("source", iface.getSource());
             nestedData.put("model", iface.getModel());
+            nestedData.put("addresses", vmDomain.getInterfaceAddresses(iface.getMacAddress()));
 
             nestedDatas.add(nestedData);
         }
         vm.put("interfaces", nestedDatas);
-
-        nestedDatas = new ArrayList<Map<String, String>>();
-        for (String address : vmDomain.getInterfaceAddresses()) {
-            nestedData = new LinkedHashMap<String, String>();
-
-            nestedData.put("address", address);
-
-            nestedDatas.add(nestedData);
-        }
-        vm.put("addresses", nestedDatas);
 
         data.put("vm", vm);
 
