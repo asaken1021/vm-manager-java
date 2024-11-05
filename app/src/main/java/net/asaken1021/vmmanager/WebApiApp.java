@@ -1,7 +1,8 @@
 package net.asaken1021.vmmanager;
 
-
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -25,11 +26,13 @@ import net.asaken1021.vmmanager.util.vm.VMRamUnit;
 public class WebApiApp {
     private VMManager vmm;
     private String uri;
+    private String isoImagesPath;
 
     private App webApp;
 
-    public WebApiApp(String uri) {
+    public WebApiApp(String uri, String isoImagesPath) {
         this.uri = uri;
+        this.isoImagesPath = isoImagesPath;
         try {
             this.vmm = new VMManager(this.uri);
         } catch (ConnectException e) {
@@ -37,14 +40,15 @@ public class WebApiApp {
         }
     }
 
-    public WebApiApp(VMManager vmm) {
+    public WebApiApp(VMManager vmm, String isoImagesPath) {
         this.vmm = vmm;
+        this.isoImagesPath = isoImagesPath;
     }
 
     public void run() {
         try {
             this.webApp = Flak.createHttpApp(8080);
-            webApp.scan(new WebApiApp(this.vmm));
+            webApp.scan(new WebApiApp(this.vmm, this.isoImagesPath));
             webApp.start();
         } catch (IllegalAccessException | InstantiationException | ClassNotFoundException | IOException e) {
             printError(e.getLocalizedMessage());
@@ -54,7 +58,7 @@ public class WebApiApp {
     private void printError(String message) {
         System.err.println("エラー: " + message);
     }
-    
+
     @Route("/")
     public String index() {
         return "index";
@@ -76,7 +80,7 @@ public class WebApiApp {
             }
             data.put("vms", vms);
         } catch (DomainLookupException e) {
-            data.put("error", e.getLocalizedMessage());
+            data.put("error", e.getLocalizedMessage()); // err
         }
 
         return data;
@@ -95,7 +99,7 @@ public class WebApiApp {
             vmDomain = this.vmm.getVm(UUID.fromString(uuid));
         } catch (DomainLookupException e) {
             data.put("error", e.getLocalizedMessage());
-            return data;
+            return data; // err
         }
 
         vm.put("uuid", vmDomain.getVmUUID().toString());
@@ -133,6 +137,89 @@ public class WebApiApp {
         vm.put("interfaces", nestedDatas);
 
         data.put("vm", vm);
+
+        return data;
+    }
+
+    @Route("/isoimages")
+    @JSON
+    public Map<String, Object> getIsoImages() {
+        Map<String, Object> data = new HashMap<String, Object>();
+        List<String> fileNames = new ArrayList<String>();
+
+        if (this.isoImagesPath.isEmpty()) {
+            return data; // err
+        }
+
+        try {
+            Files.walk(Paths.get(this.isoImagesPath)).filter((path) -> {
+                return Files.isRegularFile(path);
+            }).forEach((path) -> {
+                fileNames.add(path.toString());
+            });
+        } catch (IOException e) {
+            return data; // err
+        }
+
+        data.put("files", fileNames);
+
+        return data;
+    }
+
+    @Route("/isoimages/folders")
+    @JSON
+    public Map<String, Object> getIsoImageFolders() {
+        Map<String, Object> data = new HashMap<String, Object>();
+        List<String> folderNames = new ArrayList<String>();
+
+        if (this.isoImagesPath.isEmpty()) {
+            return data; // err
+        }
+
+        try {
+            Files.walk(Paths.get(this.isoImagesPath)).filter((path) -> {
+                return Files.isDirectory(path);
+            }).forEach((path) -> {
+                folderNames.add(path.toString());
+            });
+        } catch (IOException e) {
+            return data; // err
+        }
+
+        data.put("folders", folderNames);
+
+        return data;
+    }
+
+    @Route("/isoimages/files/*folder")
+    @JSON
+    public Map<String, Object> getIsoImageFiles(String folder) {
+        Map<String, Object> data = new HashMap<String, Object>();
+        List<String> fileNames = new ArrayList<String>();
+
+        if (this.isoImagesPath.isEmpty()) {
+            return data; // err
+        }
+
+        if (!folder.endsWith("/")) {
+            folder += "/";
+        }
+
+        if (!folder.startsWith(this.isoImagesPath)) {
+            return data; // err
+        }
+
+        try {
+            Files.walk(Paths.get(folder), 1).filter((path) -> {
+                return Files.isRegularFile(path);
+            }).forEach((path) -> {
+                fileNames.add(path.toString());
+            });
+        } catch (IOException e) {
+            return data; // err
+        }
+
+        data.put("files", fileNames);
 
         return data;
     }
