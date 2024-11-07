@@ -1,6 +1,7 @@
 package net.asaken1021.vmmanager.util;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
@@ -56,6 +57,10 @@ public class VMManager {
         } catch (LibvirtException e) {
             throw new DomainLookupException(e);
         }
+    }
+
+    public List<String> getHostInterfaces() throws LibvirtException {
+        return Arrays.asList(this.conn.listInterfaces());
     }
 
     public VMDomain createVm(String name, int cpus, long ram, List<VMDisk> disks,

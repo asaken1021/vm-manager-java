@@ -29,7 +29,9 @@ public class VMDisk {
         this.targetBus = targetBus;
 
         if (!new File(this.sourceFile).exists()) {
-            throw new FileNotFoundException();
+            if (!this.sourceFile.equals("")){
+                throw new FileNotFoundException();
+            }
         }
     }
 

@@ -241,7 +241,7 @@ public class CliApp {
                 macAddress = "";
             }
 
-            vmNetworkInterfaces.add(new VMNetworkInterface(macAddress, source, model, InterfaceType.getTypeByString(type)));
+            vmNetworkInterfaces.add(new VMNetworkInterface(macAddress, source, model, InterfaceType.getTypeByString(type), vmm));
 
             System.out.print("- さらにインターフェイスを追加しますか? [y/n] > ");
             select = scanner.next();

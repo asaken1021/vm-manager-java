@@ -1,13 +1,12 @@
 package net.asaken1021.vmmanager.util.vm;
 
-import java.net.NetworkInterface;
-import java.net.SocketException;
-import java.util.Objects;
+import org.libvirt.LibvirtException;
 
 import jakarta.xml.bind.JAXBException;
 import net.asaken1021.vmmanager.util.xml.XMLType;
 import net.asaken1021.vmmanager.util.InterfaceNotFoundException;
 import net.asaken1021.vmmanager.util.TypeNotFoundException;
+import net.asaken1021.vmmanager.util.VMManager;
 import net.asaken1021.vmmanager.util.vm.networkinterface.*;
 import net.asaken1021.vmmanager.util.vm.networkinterface.xml.NetworkInterfaceXML;
 import net.asaken1021.vmmanager.util.xml.DomainXMLParser;
@@ -18,7 +17,7 @@ public class VMNetworkInterface {
     private String model;
     private InterfaceType interfaceType;
 
-    public VMNetworkInterface(String macAddress, String source, String model, InterfaceType interfaceType) throws InterfaceNotFoundException {
+    public VMNetworkInterface(String macAddress, String source, String model, InterfaceType interfaceType, VMManager vmm) throws InterfaceNotFoundException {
         this.macAddress = macAddress;
         this.source = source;
         this.model = model;
@@ -26,10 +25,10 @@ public class VMNetworkInterface {
 
         if (this.interfaceType.equals(InterfaceType.IF_BRIDGE)) {
             try {
-                if (Objects.isNull(NetworkInterface.getByName(source))) {
+                if (!vmm.getHostInterfaces().contains(this.source)) {
                     throw new InterfaceNotFoundException();
                 }
-            } catch (SocketException e) {
+            } catch (LibvirtException e) {
                 throw new InterfaceNotFoundException(e);
             }
         }

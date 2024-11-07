@@ -12,16 +12,25 @@ import java.util.UUID;
 
 import flak.App;
 import flak.Flak;
+import flak.annotations.Post;
 import flak.annotations.Route;
 import flak.jackson.JSON;
 
 import net.asaken1021.vmmanager.util.ConnectException;
+import net.asaken1021.vmmanager.util.DomainCreateException;
 import net.asaken1021.vmmanager.util.DomainLookupException;
+import net.asaken1021.vmmanager.util.FileNotFoundException;
+import net.asaken1021.vmmanager.util.InterfaceNotFoundException;
+import net.asaken1021.vmmanager.util.TypeNotFoundException;
 import net.asaken1021.vmmanager.util.VMManager;
 import net.asaken1021.vmmanager.util.vm.VMDisk;
 import net.asaken1021.vmmanager.util.vm.VMDomain;
+import net.asaken1021.vmmanager.util.vm.VMGraphics;
 import net.asaken1021.vmmanager.util.vm.VMNetworkInterface;
 import net.asaken1021.vmmanager.util.vm.VMRamUnit;
+import net.asaken1021.vmmanager.util.vm.VMVideo;
+import net.asaken1021.vmmanager.util.vm.networkinterface.InterfaceType;
+import net.asaken1021.vmmanager.util.vm.video.VideoType;
 
 public class WebApiApp {
     private VMManager vmm;
@@ -67,7 +76,7 @@ public class WebApiApp {
     @Route("/vms")
     @JSON
     public Map<String, Object> getVms() {
-        Map<String, Object> data = new HashMap<String, Object>();
+        Map<String, Object> response = new HashMap<String, Object>();
         List<Map<String, Object>> vms = new ArrayList<Map<String, Object>>();
         Map<String, Object> vm = new LinkedHashMap<String, Object>();
 
@@ -78,18 +87,18 @@ public class WebApiApp {
                 vm.put("name", name);
                 vms.add(vm);
             }
-            data.put("vms", vms);
+            response.put("vms", vms);
         } catch (DomainLookupException e) {
-            data.put("error", e.getLocalizedMessage()); // err
+            response.put("error", e.getLocalizedMessage()); // err
         }
 
-        return data;
+        return response;
     }
 
     @Route("/vms/:uuid")
     @JSON
     public Map<String, Object> getVmByUUID(String uuid) {
-        Map<String, Object> data = new HashMap<String, Object>();
+        Map<String, Object> response = new HashMap<String, Object>();
         Map<String, Object> vm = new LinkedHashMap<String, Object>();
         List<Map<String, Object>> nestedDatas = new ArrayList<Map<String, Object>>();
         Map<String, Object> nestedData = new LinkedHashMap<String, Object>();
@@ -98,8 +107,8 @@ public class WebApiApp {
         try {
             vmDomain = this.vmm.getVm(UUID.fromString(uuid));
         } catch (DomainLookupException e) {
-            data.put("error", e.getLocalizedMessage());
-            return data; // err
+            response.put("error", e.getLocalizedMessage());
+            return response; // err
         }
 
         vm.put("uuid", vmDomain.getVmUUID().toString());
@@ -136,19 +145,19 @@ public class WebApiApp {
         }
         vm.put("interfaces", nestedDatas);
 
-        data.put("vm", vm);
+        response.put("vm", vm);
 
-        return data;
+        return response;
     }
 
     @Route("/isoimages")
     @JSON
     public Map<String, Object> getIsoImages() {
-        Map<String, Object> data = new HashMap<String, Object>();
+        Map<String, Object> response = new HashMap<String, Object>();
         List<String> fileNames = new ArrayList<String>();
 
         if (this.isoImagesPath.isEmpty()) {
-            return data; // err
+            return response; // err
         }
 
         try {
@@ -158,22 +167,22 @@ public class WebApiApp {
                 fileNames.add(path.toString());
             });
         } catch (IOException e) {
-            return data; // err
+            return response; // err
         }
 
-        data.put("files", fileNames);
+        response.put("files", fileNames);
 
-        return data;
+        return response;
     }
 
     @Route("/isoimages/folders")
     @JSON
     public Map<String, Object> getIsoImageFolders() {
-        Map<String, Object> data = new HashMap<String, Object>();
+        Map<String, Object> response = new HashMap<String, Object>();
         List<String> folderNames = new ArrayList<String>();
 
         if (this.isoImagesPath.isEmpty()) {
-            return data; // err
+            return response; // err
         }
 
         try {
@@ -183,22 +192,22 @@ public class WebApiApp {
                 folderNames.add(path.toString());
             });
         } catch (IOException e) {
-            return data; // err
+            return response; // err
         }
 
-        data.put("folders", folderNames);
+        response.put("folders", folderNames);
 
-        return data;
+        return response;
     }
 
     @Route("/isoimages/files/*folder")
     @JSON
     public Map<String, Object> getIsoImageFiles(String folder) {
-        Map<String, Object> data = new HashMap<String, Object>();
+        Map<String, Object> response = new HashMap<String, Object>();
         List<String> fileNames = new ArrayList<String>();
 
         if (this.isoImagesPath.isEmpty()) {
-            return data; // err
+            return response; // err
         }
 
         if (!folder.endsWith("/")) {
@@ -206,7 +215,7 @@ public class WebApiApp {
         }
 
         if (!folder.startsWith(this.isoImagesPath)) {
-            return data; // err
+            return response; // err
         }
 
         try {
@@ -216,11 +225,153 @@ public class WebApiApp {
                 fileNames.add(path.toString());
             });
         } catch (IOException e) {
-            return data; // err
+            return response; // err
         }
 
-        data.put("files", fileNames);
+        response.put("files", fileNames);
 
-        return data;
+        return response;
+    }
+
+    @Route("/vms")
+    @Post
+    @JSON
+    public Map<String, Object> createVm(Map<String, Object> request) {
+        Map<String, Object> response = new LinkedHashMap<String, Object>();
+        String vmName = "";
+        int vmCpus = 0;
+        long vmRam = 0;
+        List<VMDisk> vmDisks = new ArrayList<VMDisk>();
+        List<VMNetworkInterface> vmNetworkInterfaces = new ArrayList<VMNetworkInterface>();
+        VMGraphics vmGraphics;
+        VMVideo vmVideo;
+
+        VMDomain domain;
+
+        Object vm = request.get("vm");
+        Object tmp;
+        if (vm instanceof Map<?, ?>) {
+            Map<?, ?> vmMap = (Map<?, ?>) vm;
+
+            tmp = vmMap.get("name");
+            if (tmp instanceof String) {
+                vmName = (String) tmp;
+            }
+
+            tmp = vmMap.get("cpus");
+            if (tmp instanceof Integer) {
+                vmCpus = (Integer) tmp;
+            }
+
+            tmp = vmMap.get("ram");
+            if (tmp instanceof Integer) {
+                vmRam = ((Integer) tmp).longValue();
+            }
+
+            tmp = vmMap.get("disks");
+            if (tmp instanceof List<?>) {
+                for (Object diskList : (List<?>) tmp) {
+                    if (diskList instanceof Map<?, ?>) {
+                        Map<?, ?> diskMap = (Map<?, ?>) diskList;
+                        Object diskData;
+                        String filePath = "";
+                        String fileType = "";
+                        String diskType = "";
+                        String diskDev = "";
+                        String diskBus = "";
+
+                        diskData = diskMap.get("file_path");
+                        if (diskData instanceof String) {
+                            filePath = (String) diskData;
+                        }
+
+                        diskData = diskMap.get("device");
+                        if (diskData instanceof String) {
+                            diskType = (String) diskData;
+                            if (diskType.equals("disk")) {
+                                fileType = "qcow2";
+                            } else if (diskType.equals("cdrom")) {
+                                fileType = "raw";
+                            } else {
+                                fileType = "";
+                            }
+                        }
+
+                        diskData = diskMap.get("target_dev");
+                        if (diskData instanceof String) {
+                            diskDev = (String) diskData;
+                        }
+
+                        diskData = diskMap.get("target_bus");
+                        if (diskData instanceof String) {
+                            diskBus = (String) diskData;
+                        }
+
+                        try {
+                            vmDisks.add(new VMDisk(diskType, "file", "qemu", fileType, filePath, diskDev, diskBus));
+                        } catch (FileNotFoundException e) {
+                            response.put("error", e.getLocalizedMessage());
+                            return response; // err
+                        }
+                    }
+                }
+            }
+
+            tmp = vmMap.get("interfaces");
+            if (tmp instanceof List<?>) {
+                for (Object ifaceList : (List<?>) tmp) {
+                    if (ifaceList instanceof Map<?, ?>) {
+                        Map<?, ?> ifaceMap = (Map<?, ?>) ifaceList;
+                        Object ifaceData;
+                        String macAddress = "";
+                        String source = "";
+                        String model = "";
+                        String type = "";
+
+                        ifaceData = ifaceMap.get("mac_address");
+                        if (ifaceData instanceof String) {
+                            macAddress = (String) ifaceData;
+                        }
+
+                        ifaceData = ifaceMap.get("type");
+                        if (ifaceData instanceof String) {
+                            type = (String) ifaceData;
+                        }
+
+                        ifaceData = ifaceMap.get("source");
+                        if (ifaceData instanceof String) {
+                            source = (String) ifaceData;
+                        }
+
+                        ifaceData = ifaceMap.get("model");
+                        if (ifaceData instanceof String) {
+                            model = (String) ifaceData;
+                        }
+
+                        try {
+                            vmNetworkInterfaces.add(new VMNetworkInterface(macAddress, source, model, InterfaceType.getTypeByString(type), this.vmm));
+                        } catch (InterfaceNotFoundException | TypeNotFoundException e) {
+                            response.put("error", e.getLocalizedMessage());
+                            return response; // err
+                        }
+                    }
+                }
+            }
+        }
+
+        vmVideo = new VMVideo(VideoType.VIDEO_VIRTIO);
+        vmGraphics = new VMGraphics("vnc", -1);
+
+        try {
+            domain = this.vmm.createVm(vmName, vmCpus, vmRam, vmDisks, vmNetworkInterfaces, vmGraphics, vmVideo);
+        } catch (DomainCreateException e) {
+            response.put("error", e.getLocalizedMessage());
+            return response; // err
+        }
+
+        response.put("staus", "OK");
+        response.put("vm", getVmByUUID(domain.getVmUUID().toString()));
+        
+        return response;
     }
 }
