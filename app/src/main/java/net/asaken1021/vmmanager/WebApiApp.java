@@ -86,7 +86,7 @@ public class WebApiApp {
         return data;
     }
 
-    @Route("/vm/:uuid")
+    @Route("/vms/:uuid")
     @JSON
     public Map<String, Object> getVmByUUID(String uuid) {
         Map<String, Object> data = new HashMap<String, Object>();
