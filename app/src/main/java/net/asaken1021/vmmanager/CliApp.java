@@ -124,7 +124,7 @@ public class CliApp {
                         domain = vmm.getVm(vmName);
 
                         System.out.println("- 仮想マシン名  : " + domain.getVmName());
-                        System.out.println("- 電源状態      : " + domain.getVmStateString());
+                        System.out.println("- 電源状態      : " + domain.getVmPowerState().getStateText());
                         System.out.println("- CPU数         : " + domain.getVmCpus());
                         System.out.println("- RAM(MiB)      : " + domain.getVmRamSize(VMRamUnit.RAM_MiB));
                         System.out.println("- 仮想ディスク  : ");

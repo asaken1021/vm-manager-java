@@ -21,6 +21,7 @@ import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
 import javax.xml.xpath.XPathFactory;
 
+import jakarta.xml.bind.JAXBException;
 import org.libvirt.Connect;
 import org.libvirt.Domain;
 import org.libvirt.DomainInfo;
@@ -30,8 +31,8 @@ import org.w3c.dom.*;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
-import jakarta.xml.bind.JAXBException;
 import net.asaken1021.vmmanager.util.DomainLookupException;
+import net.asaken1021.vmmanager.util.DomainPowerState;
 import net.asaken1021.vmmanager.util.FileNotFoundException;
 import net.asaken1021.vmmanager.util.TypeNotFoundException;
 import net.asaken1021.vmmanager.util.XMLParserException;
@@ -212,10 +213,6 @@ public class VMDomain {
         }
     }
 
-    private DomainInfo.DomainState getVmState() {
-        return this.domInfo.state;
-    }
-
     private List<DomainInterface> getDomainInterfaces() {
         List<DomainInterface> domainInterfaces = new ArrayList<DomainInterface>();
 
@@ -251,22 +248,8 @@ public class VMDomain {
         return UUID.fromString(getVmUUIDString());
     }
 
-    public String getVmStateString() {
-        String powerState;
-
-        switch (getVmState()) {
-            case DomainInfo.DomainState.VIR_DOMAIN_SHUTOFF:
-                powerState = "Shut off";
-                break;
-            case DomainInfo.DomainState.VIR_DOMAIN_RUNNING:
-                powerState = "Running";
-                break;
-            default:
-                powerState = "Other state";
-                break;
-        }
-
-        return powerState;
+    public DomainPowerState getVmPowerState() {
+        return DomainPowerState.getStateByDomainState(this.domInfo.state);
     }
 
     public int getVmCpus() {

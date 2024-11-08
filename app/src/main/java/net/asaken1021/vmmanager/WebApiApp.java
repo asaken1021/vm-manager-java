@@ -19,8 +19,12 @@ import flak.jackson.JSON;
 import net.asaken1021.vmmanager.util.ConnectException;
 import net.asaken1021.vmmanager.util.DomainCreateException;
 import net.asaken1021.vmmanager.util.DomainLookupException;
+import net.asaken1021.vmmanager.util.DomainPowerState;
+import net.asaken1021.vmmanager.util.DomainStartException;
+import net.asaken1021.vmmanager.util.DomainStopException;
 import net.asaken1021.vmmanager.util.FileNotFoundException;
 import net.asaken1021.vmmanager.util.InterfaceNotFoundException;
+import net.asaken1021.vmmanager.util.InvalidPowerStateException;
 import net.asaken1021.vmmanager.util.TypeNotFoundException;
 import net.asaken1021.vmmanager.util.VMManager;
 import net.asaken1021.vmmanager.util.vm.VMDisk;
@@ -113,7 +117,7 @@ public class WebApiApp {
 
         vm.put("uuid", vmDomain.getVmUUID().toString());
         vm.put("name", vmDomain.getVmName());
-        vm.put("state", vmDomain.getVmStateString());
+        vm.put("state", vmDomain.getVmPowerState().getStateText());
         vm.put("cpus", vmDomain.getVmCpus());
         vm.put("ram", vmDomain.getVmRamSize(VMRamUnit.RAM_MiB));
         vm.put("ram_unit", VMRamUnit.RAM_MiB.getUnitText());
@@ -372,6 +376,61 @@ public class WebApiApp {
         response.put("staus", "OK");
         response.put("vm", getVmByUUID(domain.getVmUUID().toString()));
         
+        return response;
+    }
+
+    @Route("/vms/:uuid/state")
+    @JSON
+    public Map<String, Object> getVmStateByUUID(String uuid) {
+        Map<String, Object> response = new LinkedHashMap<String, Object>();
+        VMDomain vmDomain;
+
+        try {
+            vmDomain = this.vmm.getVm(UUID.fromString(uuid));
+        } catch (DomainLookupException e) {
+            response.put("error", e.getLocalizedMessage());
+            return response; // err
+        }
+
+        response.put("state", vmDomain.getVmPowerState().getStateText());
+
+        return response;
+    }
+
+    @Route("/vms/:uuid/state")
+    @Post
+    @JSON
+    public Map<String, Object> setVmStateByUUID(String uuid, Map<String, Object> request) {
+        Map<String, Object> response = new LinkedHashMap<String, Object>();
+
+        Object state = request.get("state");
+        String stateString = "";
+        String vmName = "";
+
+        if (state instanceof String) {
+            stateString = (String) state;
+        }
+
+        try {
+            vmName = this.vmm.getVm(UUID.fromString(uuid)).getVmName();
+
+            switch (DomainPowerState.getStateByString(stateString)) {
+                case POWER_RUNNING:
+                    this.vmm.startVm(vmName);
+                    break;
+                case POWER_SHUTOFF:
+                    this.vmm.stopVm(vmName);
+                    break;
+                default:
+                    throw new InvalidPowerStateException();
+            }
+
+            response.put("state", stateString);
+        } catch (DomainLookupException | DomainStartException | DomainStopException | InvalidPowerStateException e) {
+            response.put("error", e.getLocalizedMessage());
+            return response; // err
+        }
+
         return response;
     }
 }
