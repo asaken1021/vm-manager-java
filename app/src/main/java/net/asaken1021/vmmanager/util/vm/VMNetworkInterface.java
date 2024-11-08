@@ -1,13 +1,13 @@
 package net.asaken1021.vmmanager.util.vm;
 
+import jakarta.xml.bind.JAXBException;
 import org.libvirt.LibvirtException;
 
-import jakarta.xml.bind.JAXBException;
 import net.asaken1021.vmmanager.util.xml.XMLType;
 import net.asaken1021.vmmanager.util.InterfaceNotFoundException;
 import net.asaken1021.vmmanager.util.TypeNotFoundException;
 import net.asaken1021.vmmanager.util.VMManager;
-import net.asaken1021.vmmanager.util.vm.networkinterface.*;
+import net.asaken1021.vmmanager.util.vm.networkinterface.InterfaceType;
 import net.asaken1021.vmmanager.util.vm.networkinterface.xml.NetworkInterfaceXML;
 import net.asaken1021.vmmanager.util.xml.DomainXMLParser;
 

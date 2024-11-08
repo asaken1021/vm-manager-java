@@ -27,7 +27,9 @@ import org.libvirt.Domain;
 import org.libvirt.DomainInfo;
 import org.libvirt.DomainInterface;
 import org.libvirt.LibvirtException;
-import org.w3c.dom.*;
+import org.w3c.dom.Document;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
