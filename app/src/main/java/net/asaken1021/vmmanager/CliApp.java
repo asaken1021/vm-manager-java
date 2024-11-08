@@ -17,14 +17,14 @@ import net.asaken1021.vmmanager.util.FileNotFoundException;
 import net.asaken1021.vmmanager.util.InterfaceNotFoundException;
 import net.asaken1021.vmmanager.util.TypeNotFoundException;
 import net.asaken1021.vmmanager.util.VMManager;
-import net.asaken1021.vmmanager.util.vm.VMDisk;
-import net.asaken1021.vmmanager.util.vm.VMDomain;
-import net.asaken1021.vmmanager.util.vm.VMGraphics;
-import net.asaken1021.vmmanager.util.vm.VMNetworkInterface;
-import net.asaken1021.vmmanager.util.vm.VMRamUnit;
-import net.asaken1021.vmmanager.util.vm.VMVideo;
-import net.asaken1021.vmmanager.util.vm.networkinterface.InterfaceType;
-import net.asaken1021.vmmanager.util.vm.video.VideoType;
+import net.asaken1021.vmmanager.util.common.vm.VMDisk;
+import net.asaken1021.vmmanager.util.common.vm.VMDomain;
+import net.asaken1021.vmmanager.util.common.vm.VMGraphics;
+import net.asaken1021.vmmanager.util.common.vm.VMNetworkInterface;
+import net.asaken1021.vmmanager.util.common.vm.VMRamUnit;
+import net.asaken1021.vmmanager.util.common.vm.VMVideo;
+import net.asaken1021.vmmanager.util.common.vm.networkinterface.InterfaceType;
+import net.asaken1021.vmmanager.util.common.vm.video.VideoType;
 
 public class CliApp {
     private VMManager vmm;

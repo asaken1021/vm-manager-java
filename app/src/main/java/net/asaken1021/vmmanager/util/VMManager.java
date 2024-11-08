@@ -11,12 +11,12 @@ import javax.xml.transform.TransformerException;
 import org.libvirt.Connect;
 import org.libvirt.LibvirtException;
 
-import net.asaken1021.vmmanager.util.vm.VMDisk;
-import net.asaken1021.vmmanager.util.vm.VMDomain;
-import net.asaken1021.vmmanager.util.vm.VMGraphics;
-import net.asaken1021.vmmanager.util.vm.VMNetworkInterface;
-import net.asaken1021.vmmanager.util.vm.VMVideo;
-import net.asaken1021.vmmanager.util.xml.DomainXMLBuilder;
+import net.asaken1021.vmmanager.util.common.vm.VMDisk;
+import net.asaken1021.vmmanager.util.common.vm.VMDomain;
+import net.asaken1021.vmmanager.util.common.vm.VMGraphics;
+import net.asaken1021.vmmanager.util.common.vm.VMNetworkInterface;
+import net.asaken1021.vmmanager.util.common.vm.VMVideo;
+import net.asaken1021.vmmanager.util.common.xml.DomainXMLBuilder;
 
 public class VMManager {
     private Connect conn;
