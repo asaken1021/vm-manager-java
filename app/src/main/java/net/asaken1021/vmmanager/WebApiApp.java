@@ -96,7 +96,7 @@ public class WebApiApp {
             data.put("vms", vms);
         } catch (DomainLookupException e) {
             response.setStatus(500);
-            data.put("error", e.getLocalizedMessage());
+            putError(data, e);
         }
 
         return data;
@@ -115,7 +115,7 @@ public class WebApiApp {
             vmDomain = this.vmm.getVm(UUID.fromString(uuid));
         } catch (DomainLookupException e) {
             response.setStatus(404);
-            data.put("error", e.getLocalizedMessage());
+            putError(data, e);
             return data;
         }
 
@@ -326,7 +326,7 @@ public class WebApiApp {
                             vmDisks.add(new VMDisk(diskType, "file", "qemu", fileType, filePath, diskDev, diskBus));
                         } catch (FileNotFoundException e) {
                             response.setStatus(400);
-                            data.put("error", e.getLocalizedMessage());
+                            putError(data, e);
                             return data;
                         }
                     }
@@ -368,7 +368,7 @@ public class WebApiApp {
                             vmNetworkInterfaces.add(new VMNetworkInterface(macAddress, source, model, InterfaceType.getTypeByString(type), this.vmm));
                         } catch (InterfaceNotFoundException | TypeNotFoundException e) {
                             response.setStatus(400);
-                            data.put("error", e.getLocalizedMessage());
+                            putError(data, e);
                             return data;
                         }
                     }
@@ -383,7 +383,7 @@ public class WebApiApp {
             domain = this.vmm.createVm(vmName, vmCpus, vmRam, vmDisks, vmNetworkInterfaces, vmGraphics, vmVideo);
         } catch (DomainCreateException e) {
             response.setStatus(400);
-            data.put("error", e.getLocalizedMessage());
+            putError(data, e);
             return data;
         }
 
@@ -403,7 +403,7 @@ public class WebApiApp {
             vmDomain = this.vmm.getVm(UUID.fromString(uuid));
         } catch (DomainLookupException e) {
             response.setStatus(404);
-            data.put("error", e.getLocalizedMessage());
+            putError(data, e);
             return data;
         }
 
@@ -443,15 +443,19 @@ public class WebApiApp {
             data.put("state", stateString);
         } catch (DomainLookupException e) {
             response.setStatus(404);
-            data.put("error", e.getLocalizedMessage());
+            putError(data, e);
         } catch (DomainStartException | DomainStopException e) {
             response.setStatus(500);
-            data.put("error", e.getLocalizedMessage());
+            putError(data, e);
         } catch (InvalidPowerStateException e) {
             response.setStatus(400);
-            data.put("error", e.getLocalizedMessage());
+            putError(data, e);
         }
 
         return data;
+    }
+
+    private void putError(Map<String, Object> data, Exception e) {
+        data.put("error", e.getLocalizedMessage());
     }
 }
