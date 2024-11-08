@@ -13,6 +13,7 @@ import java.util.UUID;
 import flak.App;
 import flak.Flak;
 import flak.annotations.Post;
+import flak.annotations.Put;
 import flak.annotations.Route;
 import flak.jackson.JSON;
 
@@ -398,7 +399,7 @@ public class WebApiApp {
     }
 
     @Route("/vms/:uuid/state")
-    @Post
+    @Put
     @JSON
     public Map<String, Object> setVmStateByUUID(String uuid, Map<String, Object> request) {
         Map<String, Object> response = new LinkedHashMap<String, Object>();
