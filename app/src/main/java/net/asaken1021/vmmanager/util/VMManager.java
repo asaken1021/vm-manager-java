@@ -93,18 +93,18 @@ public class VMManager {
         }
     }
 
-    public void startVm(String name) throws DomainStartException {
+    public void startVm(String name) throws DomainLookupException, DomainStartException {
         try {
             getVm(name).startVm();
-        } catch (LibvirtException | DomainLookupException e) {
+        } catch (LibvirtException e) {
             throw new DomainStartException(e);
         }
     }
 
-    public void stopVm(String name) throws DomainStopException {
+    public void stopVm(String name) throws DomainLookupException, DomainStopException {
         try {
             getVm(name).stopVm();
-        } catch (LibvirtException | DomainLookupException e) {
+        } catch (LibvirtException e) {
             throw new DomainStopException(e);
         }
     }

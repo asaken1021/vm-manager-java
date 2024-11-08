@@ -12,6 +12,7 @@ import java.util.UUID;
 
 import flak.App;
 import flak.Flak;
+import flak.Response;
 import flak.annotations.Post;
 import flak.annotations.Put;
 import flak.annotations.Route;
@@ -80,8 +81,8 @@ public class WebApiApp {
 
     @Route("/vms")
     @JSON
-    public Map<String, Object> getVms() {
-        Map<String, Object> response = new HashMap<String, Object>();
+    public Map<String, Object> getVms(Response response) {
+        Map<String, Object> data = new HashMap<String, Object>();
         List<Map<String, Object>> vms = new ArrayList<Map<String, Object>>();
         Map<String, Object> vm = new LinkedHashMap<String, Object>();
 
@@ -92,18 +93,19 @@ public class WebApiApp {
                 vm.put("name", name);
                 vms.add(vm);
             }
-            response.put("vms", vms);
+            data.put("vms", vms);
         } catch (DomainLookupException e) {
-            response.put("error", e.getLocalizedMessage()); // err
+            response.setStatus(500);
+            data.put("error", e.getLocalizedMessage());
         }
 
-        return response;
+        return data;
     }
 
     @Route("/vms/:uuid")
     @JSON
-    public Map<String, Object> getVmByUUID(String uuid) {
-        Map<String, Object> response = new HashMap<String, Object>();
+    public Map<String, Object> getVmByUUID(String uuid, Response response) {
+        Map<String, Object> data = new HashMap<String, Object>();
         Map<String, Object> vm = new LinkedHashMap<String, Object>();
         List<Map<String, Object>> nestedDatas = new ArrayList<Map<String, Object>>();
         Map<String, Object> nestedData = new LinkedHashMap<String, Object>();
@@ -112,8 +114,9 @@ public class WebApiApp {
         try {
             vmDomain = this.vmm.getVm(UUID.fromString(uuid));
         } catch (DomainLookupException e) {
-            response.put("error", e.getLocalizedMessage());
-            return response; // err
+            response.setStatus(404);
+            data.put("error", e.getLocalizedMessage());
+            return data;
         }
 
         vm.put("uuid", vmDomain.getVmUUID().toString());
@@ -150,19 +153,20 @@ public class WebApiApp {
         }
         vm.put("interfaces", nestedDatas);
 
-        response.put("vm", vm);
+        data.put("vm", vm);
 
-        return response;
+        return data;
     }
 
     @Route("/isoimages")
     @JSON
-    public Map<String, Object> getIsoImages() {
-        Map<String, Object> response = new HashMap<String, Object>();
+    public Map<String, Object> getIsoImages(Response response) {
+        Map<String, Object> data = new HashMap<String, Object>();
         List<String> fileNames = new ArrayList<String>();
 
         if (this.isoImagesPath.isEmpty()) {
-            return response; // err
+            response.setStatus(400);
+            return data;
         }
 
         try {
@@ -172,22 +176,24 @@ public class WebApiApp {
                 fileNames.add(path.toString());
             });
         } catch (IOException e) {
-            return response; // err
+            response.setStatus(500);
+            return data;
         }
 
-        response.put("files", fileNames);
+        data.put("files", fileNames);
 
-        return response;
+        return data;
     }
 
     @Route("/isoimages/folders")
     @JSON
-    public Map<String, Object> getIsoImageFolders() {
-        Map<String, Object> response = new HashMap<String, Object>();
+    public Map<String, Object> getIsoImageFolders(Response response) {
+        Map<String, Object> data = new HashMap<String, Object>();
         List<String> folderNames = new ArrayList<String>();
 
         if (this.isoImagesPath.isEmpty()) {
-            return response; // err
+            response.setStatus(400);
+            return data;
         }
 
         try {
@@ -197,22 +203,24 @@ public class WebApiApp {
                 folderNames.add(path.toString());
             });
         } catch (IOException e) {
-            return response; // err
+            response.setStatus(500);
+            return data;
         }
 
-        response.put("folders", folderNames);
+        data.put("folders", folderNames);
 
-        return response;
+        return data;
     }
 
     @Route("/isoimages/files/*folder")
     @JSON
-    public Map<String, Object> getIsoImageFiles(String folder) {
-        Map<String, Object> response = new HashMap<String, Object>();
+    public Map<String, Object> getIsoImageFiles(String folder, Response response) {
+        Map<String, Object> data = new HashMap<String, Object>();
         List<String> fileNames = new ArrayList<String>();
 
         if (this.isoImagesPath.isEmpty()) {
-            return response; // err
+            response.setStatus(400);
+            return data;
         }
 
         if (!folder.endsWith("/")) {
@@ -220,7 +228,8 @@ public class WebApiApp {
         }
 
         if (!folder.startsWith(this.isoImagesPath)) {
-            return response; // err
+            response.setStatus(400);
+            return data;
         }
 
         try {
@@ -230,19 +239,20 @@ public class WebApiApp {
                 fileNames.add(path.toString());
             });
         } catch (IOException e) {
-            return response; // err
+            response.setStatus(500);
+            return data;
         }
 
-        response.put("files", fileNames);
+        data.put("files", fileNames);
 
-        return response;
+        return data;
     }
 
     @Route("/vms")
     @Post
     @JSON
-    public Map<String, Object> createVm(Map<String, Object> request) {
-        Map<String, Object> response = new LinkedHashMap<String, Object>();
+    public Map<String, Object> createVm(Map<String, Object> request, Response response) {
+        Map<String, Object> data = new LinkedHashMap<String, Object>();
         String vmName = "";
         int vmCpus = 0;
         long vmRam = 0;
@@ -315,8 +325,9 @@ public class WebApiApp {
                         try {
                             vmDisks.add(new VMDisk(diskType, "file", "qemu", fileType, filePath, diskDev, diskBus));
                         } catch (FileNotFoundException e) {
-                            response.put("error", e.getLocalizedMessage());
-                            return response; // err
+                            response.setStatus(400);
+                            data.put("error", e.getLocalizedMessage());
+                            return data;
                         }
                     }
                 }
@@ -356,8 +367,9 @@ public class WebApiApp {
                         try {
                             vmNetworkInterfaces.add(new VMNetworkInterface(macAddress, source, model, InterfaceType.getTypeByString(type), this.vmm));
                         } catch (InterfaceNotFoundException | TypeNotFoundException e) {
-                            response.put("error", e.getLocalizedMessage());
-                            return response; // err
+                            response.setStatus(400);
+                            data.put("error", e.getLocalizedMessage());
+                            return data;
                         }
                     }
                 }
@@ -370,39 +382,41 @@ public class WebApiApp {
         try {
             domain = this.vmm.createVm(vmName, vmCpus, vmRam, vmDisks, vmNetworkInterfaces, vmGraphics, vmVideo);
         } catch (DomainCreateException e) {
-            response.put("error", e.getLocalizedMessage());
-            return response; // err
+            response.setStatus(400);
+            data.put("error", e.getLocalizedMessage());
+            return data;
         }
 
-        response.put("staus", "OK");
-        response.put("vm", getVmByUUID(domain.getVmUUID().toString()));
+        data.put("staus", "OK");
+        data.put("vm", getVmByUUID(domain.getVmUUID().toString(), response));
         
-        return response;
+        return data;
     }
 
     @Route("/vms/:uuid/state")
     @JSON
-    public Map<String, Object> getVmStateByUUID(String uuid) {
-        Map<String, Object> response = new LinkedHashMap<String, Object>();
+    public Map<String, Object> getVmStateByUUID(String uuid, Response response) {
+        Map<String, Object> data = new LinkedHashMap<String, Object>();
         VMDomain vmDomain;
 
         try {
             vmDomain = this.vmm.getVm(UUID.fromString(uuid));
         } catch (DomainLookupException e) {
-            response.put("error", e.getLocalizedMessage());
-            return response; // err
+            response.setStatus(404);
+            data.put("error", e.getLocalizedMessage());
+            return data;
         }
 
-        response.put("state", vmDomain.getVmPowerState().getStateText());
+        data.put("state", vmDomain.getVmPowerState().getStateText());
 
-        return response;
+        return data;
     }
 
     @Route("/vms/:uuid/state")
     @Put
     @JSON
-    public Map<String, Object> setVmStateByUUID(String uuid, Map<String, Object> request) {
-        Map<String, Object> response = new LinkedHashMap<String, Object>();
+    public Map<String, Object> setVmStateByUUID(String uuid, Map<String, Object> request, Response response) {
+        Map<String, Object> data = new LinkedHashMap<String, Object>();
 
         Object state = request.get("state");
         String stateString = "";
@@ -426,12 +440,18 @@ public class WebApiApp {
                     throw new InvalidPowerStateException();
             }
 
-            response.put("state", stateString);
-        } catch (DomainLookupException | DomainStartException | DomainStopException | InvalidPowerStateException e) {
-            response.put("error", e.getLocalizedMessage());
-            return response; // err
+            data.put("state", stateString);
+        } catch (DomainLookupException e) {
+            response.setStatus(404);
+            data.put("error", e.getLocalizedMessage());
+        } catch (DomainStartException | DomainStopException e) {
+            response.setStatus(500);
+            data.put("error", e.getLocalizedMessage());
+        } catch (InvalidPowerStateException e) {
+            response.setStatus(400);
+            data.put("error", e.getLocalizedMessage());
         }
 
-        return response;
+        return data;
     }
 }
