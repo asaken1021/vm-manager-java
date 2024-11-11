@@ -37,6 +37,8 @@ import net.asaken1021.vmmanager.util.common.vm.VMRamUnit;
 import net.asaken1021.vmmanager.util.common.vm.VMVideo;
 import net.asaken1021.vmmanager.util.common.vm.networkinterface.InterfaceType;
 import net.asaken1021.vmmanager.util.common.vm.video.VideoType;
+import net.asaken1021.vmmanager.util.webapi.BadRequestException;
+import net.asaken1021.vmmanager.util.webapi.IsoImagesNotSpecifiedException;
 
 public class WebApiApp {
     private VMManager vmm;
@@ -165,7 +167,8 @@ public class WebApiApp {
         List<String> fileNames = new ArrayList<String>();
 
         if (this.isoImagesPath.isEmpty()) {
-            response.setStatus(400);
+            response.setStatus(500);
+            putError(data, new IsoImagesNotSpecifiedException());
             return data;
         }
 
@@ -177,6 +180,7 @@ public class WebApiApp {
             });
         } catch (IOException e) {
             response.setStatus(500);
+            putError(data, e);
             return data;
         }
 
@@ -192,7 +196,8 @@ public class WebApiApp {
         List<String> folderNames = new ArrayList<String>();
 
         if (this.isoImagesPath.isEmpty()) {
-            response.setStatus(400);
+            response.setStatus(500);
+            putError(data, new IsoImagesNotSpecifiedException());
             return data;
         }
 
@@ -204,6 +209,7 @@ public class WebApiApp {
             });
         } catch (IOException e) {
             response.setStatus(500);
+            putError(data, e);
             return data;
         }
 
@@ -219,7 +225,8 @@ public class WebApiApp {
         List<String> fileNames = new ArrayList<String>();
 
         if (this.isoImagesPath.isEmpty()) {
-            response.setStatus(400);
+            response.setStatus(500);
+            putError(data, new IsoImagesNotSpecifiedException());
             return data;
         }
 
@@ -228,7 +235,8 @@ public class WebApiApp {
         }
 
         if (!folder.startsWith(this.isoImagesPath)) {
-            response.setStatus(400);
+            response.setStatus(400); // TODO
+            putError(data, new BadRequestException());
             return data;
         }
 
@@ -240,6 +248,7 @@ public class WebApiApp {
             });
         } catch (IOException e) {
             response.setStatus(500);
+            putError(data, e);
             return data;
         }
 
