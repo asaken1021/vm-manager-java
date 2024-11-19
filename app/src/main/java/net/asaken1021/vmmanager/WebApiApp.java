@@ -1,5 +1,6 @@
 package net.asaken1021.vmmanager;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -234,13 +235,19 @@ public class WebApiApp {
             folder += "/";
         }
 
-        if (!folder.startsWith(this.isoImagesPath)) {
-            response.setStatus(400); // TODO
-            putError(data, new BadRequestException());
-            return data;
-        }
+        // if (!folder.startsWith(this.isoImagesPath)) {
+        //     response.setStatus(400);
+        //     putError(data, new BadRequestException());
+        //     return data;
+        // }
 
         try {
+            if (!new File(folder).getCanonicalPath().startsWith(this.isoImagesPath)) {
+                response.setStatus(400);
+                putError(data, new BadRequestException());
+                return data;
+            }
+            
             Files.walk(Paths.get(folder), 1).filter((path) -> {
                 return Files.isRegularFile(path);
             }).forEach((path) -> {
