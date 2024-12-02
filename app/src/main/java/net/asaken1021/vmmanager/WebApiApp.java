@@ -45,12 +45,15 @@ public class WebApiApp {
     private VMManager vmm;
     private String uri;
     private String isoImagesPath;
+    private String allowOrigin;
 
     private App webApp;
 
-    public WebApiApp(String uri, String isoImagesPath) {
+    public WebApiApp(String uri, String isoImagesPath, String allowOrigin) {
         this.uri = uri;
         this.isoImagesPath = isoImagesPath;
+        this.allowOrigin = allowOrigin;
+
         try {
             this.vmm = new VMManager(this.uri);
         } catch (ConnectException e) {
@@ -58,15 +61,16 @@ public class WebApiApp {
         }
     }
 
-    public WebApiApp(VMManager vmm, String isoImagesPath) {
+    public WebApiApp(VMManager vmm, String isoImagesPath, String allowOrigin) {
         this.vmm = vmm;
         this.isoImagesPath = isoImagesPath;
+        this.allowOrigin = allowOrigin;
     }
 
     public void run() {
         try {
             this.webApp = Flak.createHttpApp(8080);
-            webApp.scan(new WebApiApp(this.vmm, this.isoImagesPath));
+            webApp.scan(new WebApiApp(this.vmm, this.isoImagesPath, this.allowOrigin));
             webApp.start();
         } catch (IllegalAccessException | InstantiationException | ClassNotFoundException | IOException e) {
             printError(e.getLocalizedMessage());
@@ -88,6 +92,8 @@ public class WebApiApp {
         Map<String, Object> data = new HashMap<String, Object>();
         List<Map<String, Object>> vms = new ArrayList<Map<String, Object>>();
         Map<String, Object> vm = new LinkedHashMap<String, Object>();
+
+        response = addAccessControlAllowOrigin(response);
 
         try {
             for (String name : this.vmm.getVmNames()) {
@@ -113,6 +119,8 @@ public class WebApiApp {
         List<Map<String, Object>> nestedDatas = new ArrayList<Map<String, Object>>();
         Map<String, Object> nestedData = new LinkedHashMap<String, Object>();
         VMDomain vmDomain;
+
+        response = addAccessControlAllowOrigin(response);
 
         try {
             vmDomain = this.vmm.getVm(UUID.fromString(uuid));
@@ -167,6 +175,8 @@ public class WebApiApp {
         Map<String, Object> data = new HashMap<String, Object>();
         List<String> fileNames = new ArrayList<String>();
 
+        response = addAccessControlAllowOrigin(response);
+
         if (this.isoImagesPath.isEmpty()) {
             response.setStatus(500);
             putError(data, new IsoImagesNotSpecifiedException());
@@ -195,6 +205,8 @@ public class WebApiApp {
     public Map<String, Object> getIsoImageFolders(Response response) {
         Map<String, Object> data = new HashMap<String, Object>();
         List<String> folderNames = new ArrayList<String>();
+
+        response = addAccessControlAllowOrigin(response);
 
         if (this.isoImagesPath.isEmpty()) {
             response.setStatus(500);
@@ -225,6 +237,8 @@ public class WebApiApp {
         Map<String, Object> data = new HashMap<String, Object>();
         List<String> fileNames = new ArrayList<String>();
 
+        response = addAccessControlAllowOrigin(response);
+
         if (this.isoImagesPath.isEmpty()) {
             response.setStatus(500);
             putError(data, new IsoImagesNotSpecifiedException());
@@ -234,12 +248,6 @@ public class WebApiApp {
         if (!folder.endsWith("/")) {
             folder += "/";
         }
-
-        // if (!folder.startsWith(this.isoImagesPath)) {
-        //     response.setStatus(400);
-        //     putError(data, new BadRequestException());
-        //     return data;
-        // }
 
         try {
             if (!new File(folder).getCanonicalPath().startsWith(this.isoImagesPath)) {
@@ -278,6 +286,8 @@ public class WebApiApp {
         VMVideo vmVideo;
 
         VMDomain domain;
+
+        response = addAccessControlAllowOrigin(response);
 
         Object vm = request.get("vm");
         Object tmp;
@@ -415,6 +425,8 @@ public class WebApiApp {
         Map<String, Object> data = new LinkedHashMap<String, Object>();
         VMDomain vmDomain;
 
+        response = addAccessControlAllowOrigin(response);
+
         try {
             vmDomain = this.vmm.getVm(UUID.fromString(uuid));
         } catch (DomainLookupException e) {
@@ -437,6 +449,8 @@ public class WebApiApp {
         Object state = request.get("state");
         String stateString = "";
         String vmName = "";
+
+        response = addAccessControlAllowOrigin(response);
 
         if (state instanceof String) {
             stateString = (String) state;
@@ -469,6 +483,12 @@ public class WebApiApp {
         }
 
         return data;
+    }
+
+    private Response addAccessControlAllowOrigin(Response response) {
+        response.addHeader("Access-Control-Allow-Origin", this.allowOrigin);
+
+        return response;
     }
 
     private void putError(Map<String, Object> data, Exception e) {
