@@ -296,6 +296,11 @@ public class WebApiApp {
         response = addAccessControlAllowOrigin(response);
 
         data = deleteVMIntr(uuid, response);
+
+        if (response.isStatusSet()) {
+            return data;
+        }
+        
         data = createVMIntr(request, uuid, response);
 
         return data;
