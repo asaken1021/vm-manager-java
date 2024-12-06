@@ -287,16 +287,19 @@ public class WebApiApp {
         return data;
     }
 
-    // @Route("/vms/:uuid")
-    // @Put
-    // @JSON
-    // public Map<String, Object> modifyVm(Map<String, Object> request, String uuid, Response response) {
-    //     Map<String, Object> data = new HashMap<String, Object>();
+    @Route("/vms/:uuid")
+    @Put
+    @JSON
+    public Map<String, Object> modifyVm(Map<String, Object> request, String uuid, Response response) {
+        Map<String, Object> data = new HashMap<String, Object>();
 
-    //     response = addAccessControlAllowOrigin(response);
+        response = addAccessControlAllowOrigin(response);
 
-    //     deleteVm(uuid, response);
-    // }
+        data = deleteVMIntr(uuid, response);
+        data = createVMIntr(request, uuid, response);
+
+        return data;
+    }
 
     @Route("/vms/:uuid")
     @Delete
@@ -382,6 +385,7 @@ public class WebApiApp {
         String vmName = "";
         int vmCpus = 0;
         long vmRam = 0;
+        VMRamUnit ramUnit = VMRamUnit.RAM_MiB;
         List<VMDisk> vmDisks = new ArrayList<VMDisk>();
         List<VMNetworkInterface> vmNetworkInterfaces = new ArrayList<VMNetworkInterface>();
         VMGraphics vmGraphics;
@@ -407,6 +411,17 @@ public class WebApiApp {
             tmp = vmMap.get("ram");
             if (tmp instanceof Integer) {
                 vmRam = ((Integer) tmp).longValue();
+            }
+
+            tmp = vmMap.get("ram_unit");
+            if (tmp instanceof String) {
+                try {
+                    ramUnit = VMRamUnit.getUnitByString((String) tmp);
+                } catch (TypeNotFoundException e) {
+                    response.setStatus(400);
+                    putError(data, e);
+                    return data;
+                }
             }
 
             tmp = vmMap.get("disks");
@@ -507,9 +522,9 @@ public class WebApiApp {
 
         try {
             if (uuid.isEmpty()) {
-                domain = this.vmm.createVm(vmName, vmCpus, vmRam, vmDisks, vmNetworkInterfaces, vmGraphics, vmVideo);
+                domain = this.vmm.createVm(vmName, vmCpus, vmRam, ramUnit, vmDisks, vmNetworkInterfaces, vmGraphics, vmVideo);
             } else {
-                domain = this.vmm.createVm(UUID.fromString(uuid), vmName, vmCpus, vmRam, vmDisks, vmNetworkInterfaces, vmGraphics, vmVideo);
+                domain = this.vmm.createVm(UUID.fromString(uuid), vmName, vmCpus, vmRam, ramUnit, vmDisks, vmNetworkInterfaces, vmGraphics, vmVideo);
             }
         } catch (DomainCreateException e) {
             response.setStatus(400);

@@ -105,7 +105,7 @@ public class CliApp {
                         vmVideo = new VMVideo(VideoType.VIDEO_VIRTIO);
                         vmGraphics = new VMGraphics("vnc", -1);
                         
-                        domain = vmm.createVm(vmName, vmCpus, vmRam, vmDisks, vmNetworkInterfaces, vmGraphics, vmVideo);
+                        domain = vmm.createVm(vmName, vmCpus, vmRam, VMRamUnit.RAM_MiB, vmDisks, vmNetworkInterfaces, vmGraphics, vmVideo);
                         System.out.println("仮想マシン " + domain.getVmName() + " を作成しました");
                         break;
                     case 2:

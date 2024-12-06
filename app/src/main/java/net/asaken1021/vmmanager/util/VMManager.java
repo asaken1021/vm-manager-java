@@ -15,6 +15,7 @@ import net.asaken1021.vmmanager.util.common.vm.VMDisk;
 import net.asaken1021.vmmanager.util.common.vm.VMDomain;
 import net.asaken1021.vmmanager.util.common.vm.VMGraphics;
 import net.asaken1021.vmmanager.util.common.vm.VMNetworkInterface;
+import net.asaken1021.vmmanager.util.common.vm.VMRamUnit;
 import net.asaken1021.vmmanager.util.common.vm.VMVideo;
 import net.asaken1021.vmmanager.util.common.xml.DomainXMLBuilder;
 
@@ -63,11 +64,11 @@ public class VMManager {
         return Arrays.asList(this.conn.listInterfaces());
     }
 
-    public VMDomain createVm(String name, int cpus, long ram, List<VMDisk> disks,
+    public VMDomain createVm(String name, int cpus, long ram, VMRamUnit ramUnit, List<VMDisk> disks,
     List<VMNetworkInterface> networkInterfaces, VMGraphics graphics, VMVideo video)
     throws DomainCreateException {
         try {
-            DomainXMLBuilder builder = new DomainXMLBuilder(name, cpus, ram, disks, networkInterfaces, graphics, video);
+            DomainXMLBuilder builder = new DomainXMLBuilder(name, cpus, ram, ramUnit, disks, networkInterfaces, graphics, video);
             String xml = builder.buildXML();
             this.conn.domainDefineXML(xml);
 
@@ -77,11 +78,11 @@ public class VMManager {
         }
     }
 
-    public VMDomain createVm(UUID uuid, String name, int cpus, long ram, List<VMDisk> disks,
+    public VMDomain createVm(UUID uuid, String name, int cpus, long ram, VMRamUnit ramUnit, List<VMDisk> disks,
     List<VMNetworkInterface> networkInterfaces, VMGraphics graphics, VMVideo video)
     throws DomainCreateException {
         try {
-            DomainXMLBuilder builder = new DomainXMLBuilder(uuid, name, cpus, ram, disks, networkInterfaces, graphics, video);
+            DomainXMLBuilder builder = new DomainXMLBuilder(uuid, name, cpus, ram, ramUnit, disks, networkInterfaces, graphics, video);
             String xml = builder.buildXML();
             this.conn.domainDefineXML(xml);
 
@@ -99,11 +100,11 @@ public class VMManager {
         return new VMDomain(this.conn, uuid);
     }
 
-    public void modifyVm(UUID uuid, String name, int cpus, long ram, List<VMDisk> disks,
-    List<VMNetworkInterface> networkInterfaces, VMGraphics graphics, VMVideo video)
+    public void modifyVm(UUID uuid, String name, int cpus, long ram, VMRamUnit ramUnit,
+    List<VMDisk> disks, List<VMNetworkInterface> networkInterfaces, VMGraphics graphics, VMVideo video)
     throws DomainCreateException, DomainDeleteException {
         deleteVm(uuid);
-        createVm(uuid, name, cpus, ram, disks, networkInterfaces, graphics, video);
+        createVm(uuid, name, cpus, ram, ramUnit, disks, networkInterfaces, graphics, video);
     }
 
     public void deleteVm(UUID uuid) throws DomainDeleteException {

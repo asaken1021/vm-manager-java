@@ -23,6 +23,7 @@ import org.w3c.dom.Element;
 import net.asaken1021.vmmanager.util.common.vm.VMDisk;
 import net.asaken1021.vmmanager.util.common.vm.VMGraphics;
 import net.asaken1021.vmmanager.util.common.vm.VMNetworkInterface;
+import net.asaken1021.vmmanager.util.common.vm.VMRamUnit;
 import net.asaken1021.vmmanager.util.common.vm.VMVideo;
 
 public class DomainXMLBuilder {
@@ -30,6 +31,7 @@ public class DomainXMLBuilder {
     private String vmName;
     private int vmCpus;
     private long vmRam;
+    private VMRamUnit ramUnit;
     private List<VMDisk> vmDisks;
     private List<VMNetworkInterface> vmNetworkInterfaces;
     private VMGraphics vmGraphics;
@@ -41,13 +43,14 @@ public class DomainXMLBuilder {
     private TransformerFactory tFactory;
     private Transformer transformer;
 
-    public DomainXMLBuilder(String vmName, int vmCpus, long vmRam, List<VMDisk> vmDisks,
-    List<VMNetworkInterface> vmNetworkInterfaces, VMGraphics vmGraphics, VMVideo vmVideo)
+    public DomainXMLBuilder(String vmName, int vmCpus, long vmRam, VMRamUnit ramUnit,
+    List<VMDisk> vmDisks, List<VMNetworkInterface> vmNetworkInterfaces, VMGraphics vmGraphics, VMVideo vmVideo)
     throws ParserConfigurationException, TransformerConfigurationException {
         this.vmUUID = null;
         this.vmName = vmName;
         this.vmCpus = vmCpus;
         this.vmRam = vmRam;
+        this.ramUnit = ramUnit;
         this.vmDisks = new ArrayList<VMDisk>(vmDisks);
         this.vmNetworkInterfaces = new ArrayList<VMNetworkInterface>(vmNetworkInterfaces);
         this.vmGraphics = vmGraphics;
@@ -60,18 +63,18 @@ public class DomainXMLBuilder {
         this.transformer = this.tFactory.newTransformer();
     }
     
-    public DomainXMLBuilder(UUID uuid, String vmName, int vmCpus, long vmRam, List<VMDisk> vmDisks,
-    List<VMNetworkInterface> vmNetworkInterfaces, VMGraphics vmGraphics, VMVideo vmVideo)
+    public DomainXMLBuilder(UUID uuid, String vmName, int vmCpus, long vmRam, VMRamUnit ramUnit,
+    List<VMDisk> vmDisks, List<VMNetworkInterface> vmNetworkInterfaces, VMGraphics vmGraphics, VMVideo vmVideo)
     throws ParserConfigurationException, TransformerConfigurationException {
-        this(vmName, vmCpus, vmRam, vmDisks, vmNetworkInterfaces, vmGraphics, vmVideo);
+        this(vmName, vmCpus, vmRam, ramUnit, vmDisks, vmNetworkInterfaces, vmGraphics, vmVideo);
         this.vmUUID = uuid;
     }
 
     public String buildXML() throws TransformerException {
-        buildXMLDocument();
-
         if (vmUUID != null) {
-            buildXMLUUID();
+            buildXMLDocument(true);
+        } else {
+            buildXMLDocument(false);
         }
 
         DOMSource source = new DOMSource(this.document);
@@ -84,10 +87,16 @@ public class DomainXMLBuilder {
         return writer.getBuffer().toString();
     }
 
-    private void buildXMLDocument() {
+    private void buildXMLDocument(boolean useUUID) {
         Element domain = this.document.createElement("domain");
         domain.setAttribute("type", "kvm");
         this.document.appendChild(domain);
+
+        if (useUUID) {
+            Element uuid = this.document.createElement("uuid");
+            uuid.appendChild(this.document.createTextNode(this.vmUUID.toString()));
+            domain.appendChild(uuid);
+        }
 
         Element name = this.document.createElement("name");
         name.appendChild(this.document.createTextNode(this.vmName));
@@ -108,6 +117,12 @@ public class DomainXMLBuilder {
         topology.setAttribute("threads", "1");
         cpu.appendChild(topology);
         domain.appendChild(cpu);
+
+        if (ramUnit.equals(VMRamUnit.RAM_MiB)) {
+            this.vmRam = this.vmRam * 1024;
+        } else if (ramUnit.equals(VMRamUnit.RAM_GiB)) {
+            this.vmRam = this.vmRam * 1024 * 1024;
+        }
 
         Element memory = this.document.createElement("memory");
         memory.setAttribute("unit", "KiB");
@@ -205,11 +220,5 @@ public class DomainXMLBuilder {
         devices.appendChild(video);
 
         domain.appendChild(devices);
-    }
-
-    private void buildXMLUUID() {
-        Element uuid = this.document.createElement("uuid");
-        uuid.appendChild(this.document.createTextNode(vmUUID.toString()));
-        this.document.appendChild(uuid);
     }
 }
