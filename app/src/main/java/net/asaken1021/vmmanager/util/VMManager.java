@@ -77,6 +77,20 @@ public class VMManager {
         }
     }
 
+    public VMDomain createVm(UUID uuid, String name, int cpus, long ram, List<VMDisk> disks,
+    List<VMNetworkInterface> networkInterfaces, VMGraphics graphics, VMVideo video)
+    throws DomainCreateException {
+        try {
+            DomainXMLBuilder builder = new DomainXMLBuilder(uuid, name, cpus, ram, disks, networkInterfaces, graphics, video);
+            String xml = builder.buildXML();
+            this.conn.domainDefineXML(xml);
+
+            return new VMDomain(this.conn, name);
+        } catch (ParserConfigurationException | TransformerException | LibvirtException | DomainLookupException e) {
+            throw new DomainCreateException(e);
+        }
+    }
+
     public VMDomain getVm(String name) throws DomainLookupException {
         return new VMDomain(this.conn, name);
     }
@@ -85,25 +99,32 @@ public class VMManager {
         return new VMDomain(this.conn, uuid);
     }
 
-    public void deleteVm(String name) throws DomainDeleteException {
+    public void modifyVm(UUID uuid, String name, int cpus, long ram, List<VMDisk> disks,
+    List<VMNetworkInterface> networkInterfaces, VMGraphics graphics, VMVideo video)
+    throws DomainCreateException, DomainDeleteException {
+        deleteVm(uuid);
+        createVm(uuid, name, cpus, ram, disks, networkInterfaces, graphics, video);
+    }
+
+    public void deleteVm(UUID uuid) throws DomainDeleteException {
         try {
-            this.conn.domainLookupByName(name).undefine(55);
+            this.conn.domainLookupByUUID(uuid).undefine(55);
         } catch (LibvirtException e) {
             throw new DomainDeleteException(e);
         }
     }
 
-    public void startVm(String name) throws DomainLookupException, DomainStartException {
+    public void startVm(UUID uuid) throws DomainLookupException, DomainStartException {
         try {
-            getVm(name).startVm();
+            getVm(uuid).startVm();
         } catch (LibvirtException e) {
             throw new DomainStartException(e);
         }
     }
 
-    public void stopVm(String name) throws DomainLookupException, DomainStopException {
+    public void stopVm(UUID uuid) throws DomainLookupException, DomainStopException {
         try {
-            getVm(name).stopVm();
+            getVm(uuid).stopVm();
         } catch (LibvirtException e) {
             throw new DomainStopException(e);
         }

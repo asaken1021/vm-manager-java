@@ -14,6 +14,7 @@ import java.util.UUID;
 import flak.App;
 import flak.Flak;
 import flak.Response;
+import flak.annotations.Delete;
 import flak.annotations.Post;
 import flak.annotations.Put;
 import flak.annotations.Route;
@@ -21,6 +22,7 @@ import flak.jackson.JSON;
 
 import net.asaken1021.vmmanager.util.ConnectException;
 import net.asaken1021.vmmanager.util.DomainCreateException;
+import net.asaken1021.vmmanager.util.DomainDeleteException;
 import net.asaken1021.vmmanager.util.DomainLookupException;
 import net.asaken1021.vmmanager.util.DomainPowerState;
 import net.asaken1021.vmmanager.util.DomainStartException;
@@ -277,6 +279,106 @@ public class WebApiApp {
     @JSON
     public Map<String, Object> createVm(Map<String, Object> request, Response response) {
         Map<String, Object> data = new LinkedHashMap<String, Object>();
+
+        response = addAccessControlAllowOrigin(response);
+        
+        data = createVMIntr(request, "", response);
+        
+        return data;
+    }
+
+    // @Route("/vms/:uuid")
+    // @Put
+    // @JSON
+    // public Map<String, Object> modifyVm(Map<String, Object> request, String uuid, Response response) {
+    //     Map<String, Object> data = new HashMap<String, Object>();
+
+    //     response = addAccessControlAllowOrigin(response);
+
+    //     deleteVm(uuid, response);
+    // }
+
+    @Route("/vms/:uuid")
+    @Delete
+    @JSON
+    public Map<String, Object> deleteVm(String uuid, Response response) {
+        Map<String, Object> data = new LinkedHashMap<String, Object>();
+
+        response = addAccessControlAllowOrigin(response);
+
+        data = deleteVMIntr(uuid, response);
+
+        return data;
+    }
+
+    @Route("/vms/:uuid/state")
+    @JSON
+    public Map<String, Object> getVmStateByUUID(String uuid, Response response) {
+        Map<String, Object> data = new LinkedHashMap<String, Object>();
+        VMDomain vmDomain;
+
+        response = addAccessControlAllowOrigin(response);
+
+        try {
+            vmDomain = this.vmm.getVm(UUID.fromString(uuid));
+        } catch (DomainLookupException e) {
+            response.setStatus(404);
+            putError(data, e);
+            return data;
+        }
+
+        data.put("state", vmDomain.getVmPowerState().getStateText());
+
+        return data;
+    }
+
+    @Route("/vms/:uuid/state")
+    @Put
+    @JSON
+    public Map<String, Object> setVmStateByUUID(String uuid, Map<String, Object> request, Response response) {
+        Map<String, Object> data = new LinkedHashMap<String, Object>();
+
+        Object state = request.get("state");
+        String stateString = "";
+        UUID vmUUID;
+
+        response = addAccessControlAllowOrigin(response);
+
+        if (state instanceof String) {
+            stateString = (String) state;
+        }
+
+        try {
+            vmUUID = this.vmm.getVm(UUID.fromString(uuid)).getVmUUID();
+
+            switch (DomainPowerState.getStateByString(stateString)) {
+                case POWER_RUNNING:
+                    this.vmm.startVm(vmUUID);
+                    break;
+                case POWER_SHUTOFF:
+                    this.vmm.stopVm(vmUUID);
+                    break;
+                default:
+                    throw new InvalidPowerStateException();
+            }
+
+            data.put("state", stateString);
+        } catch (DomainLookupException e) {
+            response.setStatus(404);
+            putError(data, e);
+        } catch (DomainStartException | DomainStopException e) {
+            response.setStatus(500);
+            putError(data, e);
+        } catch (InvalidPowerStateException e) {
+            response.setStatus(400);
+            putError(data, e);
+        }
+
+        return data;
+    }
+
+    private Map<String, Object> createVMIntr(Map<String, Object> request, String uuid, Response response) {
+        Map<String, Object> data = new HashMap<String, Object>();
         String vmName = "";
         int vmCpus = 0;
         long vmRam = 0;
@@ -286,8 +388,6 @@ public class WebApiApp {
         VMVideo vmVideo;
 
         VMDomain domain;
-
-        response = addAccessControlAllowOrigin(response);
 
         Object vm = request.get("vm");
         Object tmp;
@@ -406,26 +506,26 @@ public class WebApiApp {
         vmGraphics = new VMGraphics("vnc", -1);
 
         try {
-            domain = this.vmm.createVm(vmName, vmCpus, vmRam, vmDisks, vmNetworkInterfaces, vmGraphics, vmVideo);
+            if (uuid.isEmpty()) {
+                domain = this.vmm.createVm(vmName, vmCpus, vmRam, vmDisks, vmNetworkInterfaces, vmGraphics, vmVideo);
+            } else {
+                domain = this.vmm.createVm(UUID.fromString(uuid), vmName, vmCpus, vmRam, vmDisks, vmNetworkInterfaces, vmGraphics, vmVideo);
+            }
         } catch (DomainCreateException e) {
             response.setStatus(400);
             putError(data, e);
             return data;
         }
 
-        data.put("staus", "OK");
+        data.put("status", "OK");
         data.put("vm", getVmByUUID(domain.getVmUUID().toString(), response));
-        
+
         return data;
     }
 
-    @Route("/vms/:uuid/state")
-    @JSON
-    public Map<String, Object> getVmStateByUUID(String uuid, Response response) {
-        Map<String, Object> data = new LinkedHashMap<String, Object>();
+    private Map<String, Object> deleteVMIntr(String uuid, Response response) {
+        Map<String, Object> data = new HashMap<String, Object>();
         VMDomain vmDomain;
-
-        response = addAccessControlAllowOrigin(response);
 
         try {
             vmDomain = this.vmm.getVm(UUID.fromString(uuid));
@@ -435,58 +535,23 @@ public class WebApiApp {
             return data;
         }
 
-        data.put("state", vmDomain.getVmPowerState().getStateText());
-
-        return data;
-    }
-
-    @Route("/vms/:uuid/state")
-    @Put
-    @JSON
-    public Map<String, Object> setVmStateByUUID(String uuid, Map<String, Object> request, Response response) {
-        Map<String, Object> data = new LinkedHashMap<String, Object>();
-
-        Object state = request.get("state");
-        String stateString = "";
-        String vmName = "";
-
-        response = addAccessControlAllowOrigin(response);
-
-        if (state instanceof String) {
-            stateString = (String) state;
-        }
-
         try {
-            vmName = this.vmm.getVm(UUID.fromString(uuid)).getVmName();
-
-            switch (DomainPowerState.getStateByString(stateString)) {
-                case POWER_RUNNING:
-                    this.vmm.startVm(vmName);
-                    break;
-                case POWER_SHUTOFF:
-                    this.vmm.stopVm(vmName);
-                    break;
-                default:
-                    throw new InvalidPowerStateException();
-            }
-
-            data.put("state", stateString);
-        } catch (DomainLookupException e) {
-            response.setStatus(404);
-            putError(data, e);
-        } catch (DomainStartException | DomainStopException e) {
-            response.setStatus(500);
-            putError(data, e);
-        } catch (InvalidPowerStateException e) {
+            this.vmm.deleteVm(vmDomain.getVmUUID());
+        } catch (DomainDeleteException e) {
             response.setStatus(400);
             putError(data, e);
+            return data;
         }
+
+        data.put("status", "OK");
 
         return data;
     }
 
     private Response addAccessControlAllowOrigin(Response response) {
-        response.addHeader("Access-Control-Allow-Origin", this.allowOrigin);
+        if (!response.hasResponseHeader("Access-Control-Allow-Origin")) {
+            response.addHeader("Access-Control-Allow-Origin", this.allowOrigin);
+        }
 
         return response;
     }

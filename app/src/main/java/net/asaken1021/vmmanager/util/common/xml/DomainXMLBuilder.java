@@ -3,6 +3,7 @@ package net.asaken1021.vmmanager.util.common.xml;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Objects;
+import java.util.UUID;
 import java.util.List;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -25,6 +26,7 @@ import net.asaken1021.vmmanager.util.common.vm.VMNetworkInterface;
 import net.asaken1021.vmmanager.util.common.vm.VMVideo;
 
 public class DomainXMLBuilder {
+    private UUID vmUUID;
     private String vmName;
     private int vmCpus;
     private long vmRam;
@@ -42,6 +44,7 @@ public class DomainXMLBuilder {
     public DomainXMLBuilder(String vmName, int vmCpus, long vmRam, List<VMDisk> vmDisks,
     List<VMNetworkInterface> vmNetworkInterfaces, VMGraphics vmGraphics, VMVideo vmVideo)
     throws ParserConfigurationException, TransformerConfigurationException {
+        this.vmUUID = null;
         this.vmName = vmName;
         this.vmCpus = vmCpus;
         this.vmRam = vmRam;
@@ -56,8 +59,32 @@ public class DomainXMLBuilder {
         this.tFactory = TransformerFactory.newInstance();
         this.transformer = this.tFactory.newTransformer();
     }
+    
+    public DomainXMLBuilder(UUID uuid, String vmName, int vmCpus, long vmRam, List<VMDisk> vmDisks,
+    List<VMNetworkInterface> vmNetworkInterfaces, VMGraphics vmGraphics, VMVideo vmVideo)
+    throws ParserConfigurationException, TransformerConfigurationException {
+        this(vmName, vmCpus, vmRam, vmDisks, vmNetworkInterfaces, vmGraphics, vmVideo);
+        this.vmUUID = uuid;
+    }
 
     public String buildXML() throws TransformerException {
+        buildXMLDocument();
+
+        if (vmUUID != null) {
+            buildXMLUUID();
+        }
+
+        DOMSource source = new DOMSource(this.document);
+        StringWriter writer = new StringWriter();
+        StreamResult result = new StreamResult(writer);
+        this.transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
+        this.transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+        this.transformer.transform(source, result);
+
+        return writer.getBuffer().toString();
+    }
+
+    private void buildXMLDocument() {
         Element domain = this.document.createElement("domain");
         domain.setAttribute("type", "kvm");
         this.document.appendChild(domain);
@@ -178,14 +205,11 @@ public class DomainXMLBuilder {
         devices.appendChild(video);
 
         domain.appendChild(devices);
+    }
 
-        DOMSource source = new DOMSource(this.document);
-        StringWriter writer = new StringWriter();
-        StreamResult result = new StreamResult(writer);
-        this.transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
-        this.transformer.setOutputProperty(OutputKeys.INDENT, "yes");
-        this.transformer.transform(source, result);
-
-        return writer.getBuffer().toString();
+    private void buildXMLUUID() {
+        Element uuid = this.document.createElement("uuid");
+        uuid.appendChild(this.document.createTextNode(vmUUID.toString()));
+        this.document.appendChild(uuid);
     }
 }

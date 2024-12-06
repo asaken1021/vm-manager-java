@@ -47,8 +47,12 @@ public class VMDisk {
             this.sourceFile = "";
         } else {
             this.sourceFile = diskXML.getSource().getFile();
-            if (!new File(this.sourceFile).exists()) {
-                throw new FileNotFoundException();
+            if (Objects.isNull(this.sourceFile)) {
+                this.sourceFile = "";
+            } else {
+                if (!new File(this.sourceFile).exists()) {
+                    throw new FileNotFoundException();
+                }
             }
         }
 

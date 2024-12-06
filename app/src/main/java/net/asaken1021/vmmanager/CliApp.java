@@ -147,7 +147,7 @@ public class CliApp {
                     case 4:
                         System.out.print("仮想マシン名 > ");
                         vmName = scanner.next();
-                        vmm.deleteVm(vmName);
+                        vmm.deleteVm(this.vmm.getVm(vmName).getVmUUID());
                         System.out.println("仮想マシンを削除しました");
                         break;
                     case 5:
@@ -268,11 +268,11 @@ public class CliApp {
 
         switch (select) {
             case 1:
-                vmm.startVm(domain.getVmName());
+                vmm.startVm(domain.getVmUUID());
                 System.out.println("仮想マシン " + domain.getVmName() + " を起動しました");
                 break;
             case 2:
-                vmm.stopVm(domain.getVmName());
+                vmm.stopVm(domain.getVmUUID());
                 System.out.println("仮想マシン " + domain.getVmName() + " を強制停止しました");
                 break;
             default:
