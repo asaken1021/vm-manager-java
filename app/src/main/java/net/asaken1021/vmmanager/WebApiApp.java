@@ -24,6 +24,7 @@ import net.asaken1021.vmmanager.util.ConnectException;
 import net.asaken1021.vmmanager.util.DomainCreateException;
 import net.asaken1021.vmmanager.util.DomainDeleteException;
 import net.asaken1021.vmmanager.util.DomainLookupException;
+import net.asaken1021.vmmanager.util.DomainNotRunningException;
 import net.asaken1021.vmmanager.util.DomainPowerState;
 import net.asaken1021.vmmanager.util.DomainStartException;
 import net.asaken1021.vmmanager.util.DomainStopException;
@@ -381,6 +382,34 @@ public class WebApiApp {
             response.setStatus(400);
             putError(data, e);
         }
+
+        return data;
+    }
+
+    @Route("/vms/:uuid/vnc")
+    @JSON
+    public Map<String, Object> getVMVNC(String uuid, Response response) {
+        Map<String, Object> data = new HashMap<String, Object>();
+        VMDomain domain;
+
+        response = addAccessControlAllowOrigin(response);
+
+        try {
+            domain = this.vmm.getVm(UUID.fromString(uuid));
+        } catch (DomainLookupException e) {
+            response.setStatus(404);
+            putError(data, e);
+            return data;
+        }
+
+        if (!domain.getVmPowerState().equals(DomainPowerState.POWER_RUNNING)) {
+            response.setStatus(400);
+            putError(data, new BadRequestException(new DomainNotRunningException()));
+            return data;
+        }
+
+        data.put("address", domain.getVmGraphics().getAddress());
+        data.put("port", domain.getVmGraphics().getPort());
 
         return data;
     }
