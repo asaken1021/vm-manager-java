@@ -94,7 +94,7 @@ public class CliApp {
                         vmCpus = scanner.nextInt();
 
                         System.out.print("- RAM(MiB) > ");
-                        vmRam = scanner.nextLong() * 1024;
+                        vmRam = scanner.nextLong();
 
                         System.out.println("- 仮想ディスクの追加");
                         vmDisks = createVmDisks(scanner);
