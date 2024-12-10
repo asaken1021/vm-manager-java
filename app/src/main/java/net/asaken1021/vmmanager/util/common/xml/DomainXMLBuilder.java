@@ -20,6 +20,7 @@ import javax.xml.transform.stream.StreamResult;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
+import net.asaken1021.vmmanager.util.common.vm.VMBoot;
 import net.asaken1021.vmmanager.util.common.vm.VMDisk;
 import net.asaken1021.vmmanager.util.common.vm.VMGraphics;
 import net.asaken1021.vmmanager.util.common.vm.VMNetworkInterface;
@@ -36,6 +37,7 @@ public class DomainXMLBuilder {
     private List<VMNetworkInterface> vmNetworkInterfaces;
     private VMGraphics vmGraphics;
     private VMVideo vmVideo;
+    private List<VMBoot> vmBoots;
 
     private DocumentBuilderFactory factory;
     private DocumentBuilder builder;
@@ -43,8 +45,8 @@ public class DomainXMLBuilder {
     private TransformerFactory tFactory;
     private Transformer transformer;
 
-    public DomainXMLBuilder(String vmName, int vmCpus, long vmRam, VMRamUnit ramUnit,
-    List<VMDisk> vmDisks, List<VMNetworkInterface> vmNetworkInterfaces, VMGraphics vmGraphics, VMVideo vmVideo)
+    public DomainXMLBuilder(String vmName, int vmCpus, long vmRam, VMRamUnit ramUnit, List<VMDisk> vmDisks,
+    List<VMNetworkInterface> vmNetworkInterfaces, VMGraphics vmGraphics, VMVideo vmVideo, List<VMBoot> vmBoots)
     throws ParserConfigurationException, TransformerConfigurationException {
         this.vmUUID = null;
         this.vmName = vmName;
@@ -55,6 +57,7 @@ public class DomainXMLBuilder {
         this.vmNetworkInterfaces = new ArrayList<VMNetworkInterface>(vmNetworkInterfaces);
         this.vmGraphics = vmGraphics;
         this.vmVideo = vmVideo;
+        this.vmBoots = vmBoots;
 
         this.factory = DocumentBuilderFactory.newInstance();
         this.builder = this.factory.newDocumentBuilder();
@@ -63,10 +66,10 @@ public class DomainXMLBuilder {
         this.transformer = this.tFactory.newTransformer();
     }
     
-    public DomainXMLBuilder(UUID uuid, String vmName, int vmCpus, long vmRam, VMRamUnit ramUnit,
-    List<VMDisk> vmDisks, List<VMNetworkInterface> vmNetworkInterfaces, VMGraphics vmGraphics, VMVideo vmVideo)
+    public DomainXMLBuilder(UUID uuid, String vmName, int vmCpus, long vmRam, VMRamUnit ramUnit, List<VMDisk> vmDisks,
+    List<VMNetworkInterface> vmNetworkInterfaces, VMGraphics vmGraphics, VMVideo vmVideo, List<VMBoot> vmBoots)
     throws ParserConfigurationException, TransformerConfigurationException {
-        this(vmName, vmCpus, vmRam, ramUnit, vmDisks, vmNetworkInterfaces, vmGraphics, vmVideo);
+        this(vmName, vmCpus, vmRam, ramUnit, vmDisks, vmNetworkInterfaces, vmGraphics, vmVideo, vmBoots);
         this.vmUUID = uuid;
     }
 
@@ -144,9 +147,13 @@ public class DomainXMLBuilder {
         nvram.setAttribute("template", "/usr/share/edk2/ovmf/OVMF_VARS.fd");
         nvram.appendChild(this.document.createTextNode("/var/lib/libvirt/qemu/nvram/" + this.vmName + "_VARS.fd"));
         os.appendChild(nvram);
-        Element boot = this.document.createElement("boot");
-        boot.setAttribute("dev", "hd");
-        os.appendChild(boot);
+
+        for (VMBoot vmBoot : vmBoots) {
+            Element boot = this.document.createElement("boot");
+            boot.setAttribute("dev", vmBoot.getDev());
+            os.appendChild(boot);
+        }
+
         domain.appendChild(os);
 
         Element features = this.document.createElement("features");

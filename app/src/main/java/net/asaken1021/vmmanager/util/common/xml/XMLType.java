@@ -1,6 +1,7 @@
 package net.asaken1021.vmmanager.util.common.xml;
 
 public enum XMLType {
+    TYPE_BOOT("/domain/os/boot"),
     TYPE_DISK("/domain/devices/disk"),
     TYPE_GRAPHICS("/domain/devices/graphics"),
     TYPE_NETWORKINTERFACE("/domain/devices/interface"),

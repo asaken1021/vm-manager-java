@@ -33,6 +33,7 @@ import net.asaken1021.vmmanager.util.InterfaceNotFoundException;
 import net.asaken1021.vmmanager.util.InvalidPowerStateException;
 import net.asaken1021.vmmanager.util.TypeNotFoundException;
 import net.asaken1021.vmmanager.util.VMManager;
+import net.asaken1021.vmmanager.util.common.vm.VMBoot;
 import net.asaken1021.vmmanager.util.common.vm.VMDisk;
 import net.asaken1021.vmmanager.util.common.vm.VMDomain;
 import net.asaken1021.vmmanager.util.common.vm.VMGraphics;
@@ -424,6 +425,7 @@ public class WebApiApp {
         List<VMNetworkInterface> vmNetworkInterfaces = new ArrayList<VMNetworkInterface>();
         VMGraphics vmGraphics;
         VMVideo vmVideo;
+        List<VMBoot> vmBoots = new ArrayList<VMBoot>();
 
         VMDomain domain;
 
@@ -549,6 +551,24 @@ public class WebApiApp {
                     }
                 }
             }
+
+            tmp = vmMap.get("boot_order");
+            if (tmp instanceof List<?>) {
+                for (Object bootList : (List<?>) tmp) {
+                    if (bootList instanceof Map<?, ?>) {
+                        Map<?, ?> bootMap = (Map<?, ?>) bootList;
+                        Object bootData;
+                        String bootDev = "";
+
+                        bootData = bootMap.get("dev");
+                        if (bootData instanceof String) {
+                            bootDev = (String) bootData;
+                        }
+
+                        vmBoots.add(new VMBoot(bootDev, true));
+                    }
+                }
+            }
         }
 
         vmVideo = new VMVideo(VideoType.VIDEO_VIRTIO);
@@ -556,9 +576,9 @@ public class WebApiApp {
 
         try {
             if (uuid.isEmpty()) {
-                domain = this.vmm.createVm(vmName, vmCpus, vmRam, ramUnit, vmDisks, vmNetworkInterfaces, vmGraphics, vmVideo);
+                domain = this.vmm.createVm(vmName, vmCpus, vmRam, ramUnit, vmDisks, vmNetworkInterfaces, vmGraphics, vmVideo, vmBoots);
             } else {
-                domain = this.vmm.createVm(UUID.fromString(uuid), vmName, vmCpus, vmRam, ramUnit, vmDisks, vmNetworkInterfaces, vmGraphics, vmVideo);
+                domain = this.vmm.createVm(UUID.fromString(uuid), vmName, vmCpus, vmRam, ramUnit, vmDisks, vmNetworkInterfaces, vmGraphics, vmVideo, vmBoots);
             }
         } catch (DomainCreateException e) {
             response.setStatus(400);

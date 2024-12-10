@@ -5,6 +5,7 @@ import java.io.StringReader;
 import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBException;
 import jakarta.xml.bind.Unmarshaller;
+import net.asaken1021.vmmanager.util.common.vm.boot.xml.BootXML;
 import net.asaken1021.vmmanager.util.common.vm.disk.xml.DiskXML;
 import net.asaken1021.vmmanager.util.common.vm.graphics.xml.GraphicsXML;
 import net.asaken1021.vmmanager.util.common.vm.networkinterface.xml.NetworkInterfaceXML;
@@ -21,6 +22,9 @@ public class DomainXMLParser {
         this.xmlType = xmlType;
 
         switch (this.xmlType) {
+            case XMLType.TYPE_BOOT:
+                this.jaxbContext = JAXBContext.newInstance(BootXML.class);
+                break;
             case XMLType.TYPE_DISK:
                 this.jaxbContext = JAXBContext.newInstance(DiskXML.class);
                 break;
@@ -36,6 +40,10 @@ public class DomainXMLParser {
                 break;
         }
         this.unmarshaller = jaxbContext.createUnmarshaller();
+    }
+
+    public BootXML parseBootXML() throws JAXBException {
+        return (BootXML)unmarshaller.unmarshal(new StringReader(this.xmlDesc));
     }
 
     public DiskXML parseDiskXML() throws JAXBException {

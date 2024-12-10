@@ -52,6 +52,7 @@ public class VMDomain {
     private List<VMNetworkInterface> vmNetworkInterfaces;
     private VMGraphics vmGraphics;
     private VMVideo vmVideo;
+    private List<VMBoot> vmBoots;
 
     public VMDomain(Connect conn, String name) throws DomainLookupException {
         this.conn = conn;
@@ -83,6 +84,7 @@ public class VMDomain {
         this.vmNetworkInterfaces = parseVmNetworkInterfaces(dom);
         this.vmGraphics = parseVmGraphics(dom);
         this.vmVideo = parseVmVideo(dom);
+        this.vmBoots = parseVmBoot(dom);
     }
 
     private List<VMDisk> parseVmDisks(Domain dom) throws XMLParserException {
@@ -149,6 +151,20 @@ public class VMDomain {
         }
 
         return vmVideo;
+    }
+
+    private List<VMBoot> parseVmBoot(Domain dom) throws XMLParserException {
+        List<VMBoot> vmBoots = new ArrayList<VMBoot>();
+
+        try {
+            for (String vmBootXML : parseXMLNodes(dom.getXMLDesc(0), XMLType.TYPE_BOOT)) {
+                vmBoots.add(new VMBoot(vmBootXML));
+            }
+        } catch (LibvirtException | JAXBException e) {
+            throw new XMLParserException(e);
+        }
+
+        return vmBoots;
     }
 
     private List<String> parseXMLNodes(String xmlDesc, XMLType xmlType) throws XMLParserException {
@@ -282,6 +298,10 @@ public class VMDomain {
 
     public VMVideo getVmVideo() {
         return this.vmVideo;
+    }
+
+    public List<VMBoot> getVmBoots() {
+        return this.vmBoots;
     }
 
     public List<String> getInterfaceAddresses(String macAddress) {

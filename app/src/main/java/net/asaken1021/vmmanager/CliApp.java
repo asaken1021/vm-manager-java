@@ -17,6 +17,7 @@ import net.asaken1021.vmmanager.util.FileNotFoundException;
 import net.asaken1021.vmmanager.util.InterfaceNotFoundException;
 import net.asaken1021.vmmanager.util.TypeNotFoundException;
 import net.asaken1021.vmmanager.util.VMManager;
+import net.asaken1021.vmmanager.util.common.vm.VMBoot;
 import net.asaken1021.vmmanager.util.common.vm.VMDisk;
 import net.asaken1021.vmmanager.util.common.vm.VMDomain;
 import net.asaken1021.vmmanager.util.common.vm.VMGraphics;
@@ -40,6 +41,7 @@ public class CliApp {
     private List<VMNetworkInterface> vmNetworkInterfaces;
     private VMGraphics vmGraphics;
     private VMVideo vmVideo;
+    private List<VMBoot> vmBoots;
 
     private VMDomain domain;
 
@@ -104,8 +106,11 @@ public class CliApp {
                         
                         vmVideo = new VMVideo(VideoType.VIDEO_VIRTIO);
                         vmGraphics = new VMGraphics("vnc", -1);
+
+                        System.out.println("- 起動順序の設定");
+                        vmBoots = createVmBoots(scanner);
                         
-                        domain = vmm.createVm(vmName, vmCpus, vmRam, VMRamUnit.RAM_MiB, vmDisks, vmNetworkInterfaces, vmGraphics, vmVideo);
+                        domain = vmm.createVm(vmName, vmCpus, vmRam, VMRamUnit.RAM_MiB, vmDisks, vmNetworkInterfaces, vmGraphics, vmVideo, vmBoots);
                         System.out.println("仮想マシン " + domain.getVmName() + " を作成しました");
                         break;
                     case 2:
@@ -143,6 +148,10 @@ public class CliApp {
                         System.out.println("- - 接続タイプ  : " + domain.getVmGraphics().getGraphicsType());
                         System.out.println("- 画面出力      :");
                         System.out.println("- - 出力デバイス: " + domain.getVmVideo().getType().getText());
+                        System.out.println("- 起動順序      : ");
+                        for (VMBoot vmBoot : domain.getVmBoots()) {
+                            System.out.println("- - デバイス種別: " + vmBoot.getDev());
+                        }
                         break;
                     case 4:
                         System.out.print("仮想マシン名 > ");
@@ -252,6 +261,31 @@ public class CliApp {
         }
 
         return vmNetworkInterfaces;
+    }
+
+    private List<VMBoot> createVmBoots(Scanner scanner) {
+        List<VMBoot> vmBoots = new ArrayList<VMBoot>();
+        boolean addBoot = true;
+        String dev, select;
+        int bootOrderNum = 1;
+
+        while(addBoot) {
+            System.out.print("- - "+ bootOrderNum + "番目の起動デバイス名 [hd/cdrom] > ");
+            dev = scanner.next();
+
+            vmBoots.add(new VMBoot(dev, true));
+
+            System.out.print("- さらに起動デバイスを追加しますか? [y/n] > ");
+            select = scanner.next();
+
+            if (select.equalsIgnoreCase("n")) {
+                addBoot = false;
+            }
+
+            bootOrderNum++;
+        }
+
+        return vmBoots;
     }
 
     private void controlVm(Scanner scanner, VMManager vmm, String name)
