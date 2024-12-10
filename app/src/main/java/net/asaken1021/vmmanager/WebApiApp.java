@@ -15,6 +15,7 @@ import flak.App;
 import flak.Flak;
 import flak.Response;
 import flak.annotations.Delete;
+import flak.annotations.Options;
 import flak.annotations.Post;
 import flak.annotations.Put;
 import flak.annotations.Route;
@@ -288,7 +289,7 @@ public class WebApiApp {
         
         return data;
     }
-
+    
     @Route("/vms/:uuid")
     @Put
     @JSON
@@ -415,6 +416,55 @@ public class WebApiApp {
         return data;
     }
 
+    @Route("/vms")
+    @Options
+    public void vmsOptions(Response response) {
+        response = addAccessControlAllowOrigin(response);
+        response = addAccessControlAllowMethods(response);
+    }
+
+    @Route("/vms/:uuid")
+    @Options
+    public void vmsUUIDOptions(String uuid, Response response) {
+        response = addAccessControlAllowOrigin(response);
+        response = addAccessControlAllowMethods(response);
+    }
+
+    @Route("/vms/:uuid/state")
+    @Options
+    public void vmsUUIDStateOptions(String uuid, Response response) {
+        response = addAccessControlAllowOrigin(response);
+        response = addAccessControlAllowMethods(response);
+    }
+
+    @Route("/vms/:uuid/vnc")
+    @Options
+    public void vmsUUIDVncOptions(String uuid, Response response) {
+        response = addAccessControlAllowOrigin(response);
+        response = addAccessControlAllowMethods(response);
+    }
+
+    @Route("/isoimages")
+    @Options
+    public void isoImagesOptions(Response response) {
+        response = addAccessControlAllowOrigin(response);
+        response = addAccessControlAllowMethods(response);
+    }
+
+    @Route("/isoimages/folders")
+    @Options
+    public void isoImagesFoldersOptions(Response response) {
+        response = addAccessControlAllowOrigin(response);
+        response = addAccessControlAllowMethods(response);
+    }
+
+    @Route("/isoimages/files/*folder")
+    @Options
+    public void isoImagesFilesFolderOptions(String folder, Response response) {
+        response = addAccessControlAllowOrigin(response);
+        response = addAccessControlAllowMethods(response);
+    }
+    
     private Map<String, Object> createVMIntr(Map<String, Object> request, String uuid, Response response) {
         Map<String, Object> data = new HashMap<String, Object>();
         String vmName = "";
@@ -620,6 +670,14 @@ public class WebApiApp {
     private Response addAccessControlAllowOrigin(Response response) {
         if (!response.hasResponseHeader("Access-Control-Allow-Origin")) {
             response.addHeader("Access-Control-Allow-Origin", this.allowOrigin);
+        }
+
+        return response;
+    }
+
+    private Response addAccessControlAllowMethods(Response response) {
+        if (!response.hasResponseHeader("Access-Control-Allow-Methods")) {
+            response.addHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE");
         }
 
         return response;
