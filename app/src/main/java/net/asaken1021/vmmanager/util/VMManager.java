@@ -1,7 +1,9 @@
 package net.asaken1021.vmmanager.util;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.UUID;
 
@@ -11,6 +13,7 @@ import javax.xml.transform.TransformerException;
 import org.libvirt.Connect;
 import org.libvirt.LibvirtException;
 
+import net.asaken1021.vmmanager.util.common.disk.DiskUtil;
 import net.asaken1021.vmmanager.util.common.vm.VMBoot;
 import net.asaken1021.vmmanager.util.common.vm.VMDisk;
 import net.asaken1021.vmmanager.util.common.vm.VMDomain;
@@ -22,6 +25,7 @@ import net.asaken1021.vmmanager.util.common.xml.DomainXMLBuilder;
 
 public class VMManager {
     private Connect conn;
+    private DiskUtil diskUtil;
 
     public VMManager(String uri) throws ConnectException {
         try {
@@ -30,10 +34,16 @@ public class VMManager {
         } catch (LibvirtException e) {
             throw new ConnectException(e);
         }
+
+        this.diskUtil = new DiskUtil(this.conn);
     }
 
     public Connect getConnect() {
         return this.conn;
+    }
+
+    public DiskUtil getDiskUtil() {
+        return this.diskUtil;
     }
 
     public void disconnect() throws LibvirtException {
@@ -65,30 +75,50 @@ public class VMManager {
         return Arrays.asList(this.conn.listInterfaces());
     }
 
-    public VMDomain createVm(String name, int cpus, long ram, VMRamUnit ramUnit, List<VMDisk> disks,
+    public VMDomain createVm(String name, int cpus, long ram, VMRamUnit ramUnit, LinkedHashMap<VMDisk, Integer> disks,
     List<VMNetworkInterface> networkInterfaces, VMGraphics graphics, VMVideo video, List<VMBoot> vmBoots)
     throws DomainCreateException {
         try {
-            DomainXMLBuilder builder = new DomainXMLBuilder(name, cpus, ram, ramUnit, disks, networkInterfaces, graphics, video, vmBoots);
+            List<VMDisk> disksList = new ArrayList<VMDisk>(disks.keySet());
+            DomainXMLBuilder builder = new DomainXMLBuilder(name, cpus, ram, ramUnit, disksList, networkInterfaces, graphics, video, vmBoots);
             String xml = builder.buildXML();
             this.conn.domainDefineXML(xml);
 
+            for (VMDisk disk : disksList) {
+                if (disk.getDevice().equals("disk")) {
+                    if (!new File(disk.getSourceFile()).exists()) {
+                        this.diskUtil.createDisk(disk.getSourceFile(), disks.get(disk).intValue());
+                    }
+                }
+            }
+
             return new VMDomain(this.conn, name);
-        } catch (ParserConfigurationException | TransformerException | LibvirtException | DomainLookupException e) {
+        } catch (ParserConfigurationException | TransformerException | LibvirtException | DomainLookupException |
+        DirectoryNotFoundException | FileAlreadyExistsException e) {
             throw new DomainCreateException(e);
         }
     }
 
-    public VMDomain createVm(UUID uuid, String name, int cpus, long ram, VMRamUnit ramUnit, List<VMDisk> disks,
+    public VMDomain createVm(UUID uuid, String name, int cpus, long ram, VMRamUnit ramUnit, LinkedHashMap<VMDisk, Integer> disks,
     List<VMNetworkInterface> networkInterfaces, VMGraphics graphics, VMVideo video, List<VMBoot> vmBoots)
     throws DomainCreateException {
         try {
-            DomainXMLBuilder builder = new DomainXMLBuilder(uuid, name, cpus, ram, ramUnit, disks, networkInterfaces, graphics, video, vmBoots);
+            List<VMDisk> disksList = new ArrayList<VMDisk>(disks.keySet());
+            DomainXMLBuilder builder = new DomainXMLBuilder(uuid, name, cpus, ram, ramUnit, disksList, networkInterfaces, graphics, video, vmBoots);
             String xml = builder.buildXML();
             this.conn.domainDefineXML(xml);
 
+            for (VMDisk disk : disksList) {
+                if (disk.getDevice().equals("disk")) {
+                    if (!new File(disk.getSourceFile()).exists()) {
+                        this.diskUtil.createDisk(disk.getSourceFile(), disks.get(disk).intValue());
+                    }
+                }
+            }
+
             return new VMDomain(this.conn, name);
-        } catch (ParserConfigurationException | TransformerException | LibvirtException | DomainLookupException e) {
+        } catch (ParserConfigurationException | TransformerException | LibvirtException | DomainLookupException  |
+        DirectoryNotFoundException | FileAlreadyExistsException e) {
             throw new DomainCreateException(e);
         }
     }
@@ -101,7 +131,7 @@ public class VMManager {
         return new VMDomain(this.conn, uuid);
     }
 
-    public void modifyVm(UUID uuid, String name, int cpus, long ram, VMRamUnit ramUnit, List<VMDisk> disks,
+    public void modifyVm(UUID uuid, String name, int cpus, long ram, VMRamUnit ramUnit, LinkedHashMap<VMDisk, Integer> disks,
     List<VMNetworkInterface> networkInterfaces, VMGraphics graphics, VMVideo video, List<VMBoot> vmBoots)
     throws DomainCreateException, DomainDeleteException {
         deleteVm(uuid);

@@ -7,15 +7,17 @@ public class App {
     public static void main(String[] args) {
         Map<String, String> argsMap = parseArgument(args);
         String uri;
+        String diskImagesPath;
         String isoImagesPath;
         String allowOrigin;
 
         uri = getArgValue(argsMap, "uri", "qemu:///system", "--uri オプションが渡されましたが，URIの指定がありません．デフォルトを使用します．");
+        diskImagesPath = getArgValue(argsMap, "disk-images-path", "", "--disk-images-path オプションが渡されましたが，パスの指定がありません．");
         isoImagesPath = getArgValue(argsMap, "iso-images-path", "", "--iso-images-path オプションが渡されましたが，パスの指定がありません．");
         allowOrigin = getArgValue(argsMap, "allow-origin", "", "--allow-origin オプションが渡されましたが，オリジンの指定がありません．");
 
         if (argsMap.containsKey("web-api")) {
-            new WebApiApp(uri, isoImagesPath, allowOrigin).run();
+            new WebApiApp(uri, diskImagesPath, isoImagesPath, allowOrigin).run();
         } else {
             new CliApp(uri).run();
         }
@@ -34,6 +36,10 @@ public class App {
                     break;
                 case "--web-api":
                     parsedArgs.put("web-api", "");
+                    break;
+                case "--disk-images-path":
+                    parsedArgs.put("disk-images-path", "");
+                    parsedValueDest = "disk-images-path";
                     break;
                 case "--iso-images-path":
                     parsedArgs.put("iso-images-path", "");

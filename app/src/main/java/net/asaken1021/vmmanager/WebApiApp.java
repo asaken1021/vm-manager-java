@@ -49,13 +49,15 @@ import net.asaken1021.vmmanager.util.webapi.IsoImagesNotSpecifiedException;
 public class WebApiApp {
     private VMManager vmm;
     private String uri;
+    private String diskImagesPath;
     private String isoImagesPath;
     private String allowOrigin;
 
     private App webApp;
 
-    public WebApiApp(String uri, String isoImagesPath, String allowOrigin) {
+    public WebApiApp(String uri, String diskImagesPath, String isoImagesPath, String allowOrigin) {
         this.uri = uri;
+        this.diskImagesPath = diskImagesPath;
         this.isoImagesPath = isoImagesPath;
         this.allowOrigin = allowOrigin;
 
@@ -66,8 +68,9 @@ public class WebApiApp {
         }
     }
 
-    public WebApiApp(VMManager vmm, String isoImagesPath, String allowOrigin) {
+    public WebApiApp(VMManager vmm, String diskImagesPath, String isoImagesPath, String allowOrigin) {
         this.vmm = vmm;
+        this.diskImagesPath = diskImagesPath;
         this.isoImagesPath = isoImagesPath;
         this.allowOrigin = allowOrigin;
     }
@@ -75,7 +78,7 @@ public class WebApiApp {
     public void run() {
         try {
             this.webApp = Flak.createHttpApp(8080);
-            webApp.scan(new WebApiApp(this.vmm, this.isoImagesPath, this.allowOrigin));
+            webApp.scan(new WebApiApp(this.vmm, this.diskImagesPath, this.isoImagesPath, this.allowOrigin));
             webApp.start();
         } catch (IllegalAccessException | InstantiationException | ClassNotFoundException | IOException e) {
             printError(e.getLocalizedMessage());
@@ -415,7 +418,7 @@ public class WebApiApp {
 
         return data;
     }
-
+    
     @Route("/vms")
     @Options
     public void vmsOptions(Response response) {
@@ -471,7 +474,7 @@ public class WebApiApp {
         int vmCpus = 0;
         long vmRam = 0;
         VMRamUnit ramUnit = VMRamUnit.RAM_MiB;
-        List<VMDisk> vmDisks = new ArrayList<VMDisk>();
+        LinkedHashMap<VMDisk, Integer> vmDisks = new LinkedHashMap<VMDisk, Integer>();
         List<VMNetworkInterface> vmNetworkInterfaces = new ArrayList<VMNetworkInterface>();
         VMGraphics vmGraphics;
         VMVideo vmVideo;
@@ -521,10 +524,24 @@ public class WebApiApp {
                         String diskType = "";
                         String diskDev = "";
                         String diskBus = "";
+                        int diskSize = 0;
 
                         diskData = diskMap.get("file_path");
                         if (diskData instanceof String) {
                             filePath = (String) diskData;
+                        }
+
+                        try {
+                            String canonicalPath = new File(filePath).getCanonicalPath();
+                            if (!canonicalPath.startsWith(this.diskImagesPath) && !canonicalPath.startsWith(this.isoImagesPath)) {
+                                response.setStatus(400);
+                                putError(data, new BadRequestException());
+                                return data;
+                            }
+                        } catch (IOException e) {
+                            response.setStatus(500);
+                            putError(data, e);
+                            return data;
                         }
 
                         diskData = diskMap.get("device");
@@ -549,8 +566,13 @@ public class WebApiApp {
                             diskBus = (String) diskData;
                         }
 
+                        diskData = diskMap.get("size");
+                        if (diskData instanceof Integer) {
+                            diskSize = ((Integer)diskData).intValue();
+                        }
+
                         try {
-                            vmDisks.add(new VMDisk(diskType, "file", "qemu", fileType, filePath, diskDev, diskBus));
+                            vmDisks.put(new VMDisk(diskType, "file", "qemu", fileType, filePath, diskDev, diskBus), diskSize);
                         } catch (FileNotFoundException e) {
                             response.setStatus(400);
                             putError(data, e);
@@ -637,7 +659,7 @@ public class WebApiApp {
         }
 
         data.put("status", "OK");
-        data.put("vm", getVmByUUID(domain.getVmUUID().toString(), response));
+        data.put("vm", getVmByUUID(domain.getVmUUID().toString(), response).get("vm"));
 
         return data;
     }

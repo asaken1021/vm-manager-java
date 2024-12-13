@@ -27,12 +27,6 @@ public class VMDisk {
         this.sourceFile = sourceFile;
         this.targetDev = targetDev;
         this.targetBus = targetBus;
-
-        if (!new File(this.sourceFile).exists()) {
-            if (!this.sourceFile.equals("")){
-                throw new FileNotFoundException();
-            }
-        }
     }
 
     public VMDisk(String xmlDesc) throws JAXBException, FileNotFoundException {

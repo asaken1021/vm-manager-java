@@ -2,6 +2,7 @@ package net.asaken1021.vmmanager;
 
 import java.util.ArrayList;
 import java.util.InputMismatchException;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Scanner;
 
@@ -37,7 +38,7 @@ public class CliApp {
     private String vmName;
     private int vmCpus;
     private long vmRam;
-    private List<VMDisk> vmDisks;
+    private LinkedHashMap<VMDisk, Integer> vmDisks;
     private List<VMNetworkInterface> vmNetworkInterfaces;
     private VMGraphics vmGraphics;
     private VMVideo vmVideo;
@@ -66,7 +67,7 @@ public class CliApp {
             vmName = "";
             vmCpus = 0;
             vmRam = 0;
-            vmDisks = new ArrayList<VMDisk>();
+            vmDisks = new LinkedHashMap<VMDisk, Integer>();
             vmNetworkInterfaces = new ArrayList<VMNetworkInterface>();
 
             printLine();
@@ -193,12 +194,16 @@ public class CliApp {
         System.err.println("エラー: " + message);
     }
 
-    private List<VMDisk> createVmDisks(Scanner scanner) throws FileNotFoundException {
-        List<VMDisk> vmDisks = new ArrayList<VMDisk>();
+    private LinkedHashMap<VMDisk, Integer> createVmDisks(Scanner scanner) throws FileNotFoundException {
+        LinkedHashMap<VMDisk, Integer> vmDisks = new LinkedHashMap<VMDisk, Integer>();
         boolean addDisk = true;
         String filePath, fileType, diskType, diskDev, diskBus, select;
+        int diskSize;
 
         while (addDisk) {
+            System.out.println("- * 仮想ディスクが指定されたパスに無い場合は作成され，");
+            System.out.println("- * 既に存在する場合はそれが使用されます．");
+
             System.out.print("- - 仮想ディスクファイルの絶対パス > ");
             filePath = scanner.next();
 
@@ -208,13 +213,20 @@ public class CliApp {
             System.out.print("- - 仮想ディスクの種類 [disk/cdrom] > ");
             diskType = scanner.next();
 
-            System.out.print("- - 仮想ディスクのデバイス名 [sdX/vdX] > ");
-            diskDev = scanner.next();
+            if (diskType.equals("disk") && !this.vmm.getDiskUtil().checkDiskExists(filePath)) {
+                System.out.print("- - 仮想ディスクのサイズ(整数, GB) > ");
+                diskSize = scanner.nextInt();
+            } else {
+                diskSize = 0;
+            }
 
             System.out.print("- - 仮想ディスクのバスタイプ [virtio/sata/scsi] > ");
             diskBus = scanner.next();
 
-            vmDisks.add(new VMDisk(diskType, "file", "qemu", fileType, filePath, diskDev, diskBus));
+            System.out.print("- - 仮想ディスクのデバイス名 [sdX/vdX] > ");
+            diskDev = scanner.next();
+
+            vmDisks.put(new VMDisk(diskType, "file", "qemu", fileType, filePath, diskDev, diskBus), diskSize);
 
             System.out.print("- さらに仮想ディスクを追加しますか? [y/n] > ");
             select = scanner.next();
