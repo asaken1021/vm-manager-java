@@ -9,6 +9,7 @@ import org.libvirt.LibvirtException;
 import org.libvirt.StoragePool;
 
 import net.asaken1021.vmmanager.util.DirectoryNotFoundException;
+import net.asaken1021.vmmanager.util.DiskCreateException;
 import net.asaken1021.vmmanager.util.FileAlreadyExistsException;
 
 public class DiskUtil {
@@ -20,7 +21,7 @@ public class DiskUtil {
     }
 
     public void createDisk(String diskPath, int diskSizeByGB)
-    throws DirectoryNotFoundException, FileAlreadyExistsException, LibvirtException {
+    throws DiskCreateException, DirectoryNotFoundException, FileAlreadyExistsException, LibvirtException {
         this.diskPath = diskPath;
 
         Path dirPath = Paths.get(this.diskPath).getParent();
@@ -32,6 +33,10 @@ public class DiskUtil {
 
         if (checkDiskExists(this.diskPath)) {
             throw new FileAlreadyExistsException();
+        }
+
+        if (diskSizeByGB <= 0) {
+            throw new DiskCreateException();
         }
 
         String tempStoragePoolXML = 

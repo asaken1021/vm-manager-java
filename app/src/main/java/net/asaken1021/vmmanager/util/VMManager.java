@@ -82,7 +82,6 @@ public class VMManager {
             List<VMDisk> disksList = new ArrayList<VMDisk>(disks.keySet());
             DomainXMLBuilder builder = new DomainXMLBuilder(name, cpus, ram, ramUnit, disksList, networkInterfaces, graphics, video, vmBoots);
             String xml = builder.buildXML();
-            this.conn.domainDefineXML(xml);
 
             for (VMDisk disk : disksList) {
                 if (disk.getDevice().equals("disk")) {
@@ -92,9 +91,11 @@ public class VMManager {
                 }
             }
 
+            this.conn.domainDefineXML(xml);
+
             return new VMDomain(this.conn, name);
         } catch (ParserConfigurationException | TransformerException | LibvirtException | DomainLookupException |
-        DirectoryNotFoundException | FileAlreadyExistsException e) {
+        DiskCreateException | DirectoryNotFoundException | FileAlreadyExistsException e) {
             throw new DomainCreateException(e);
         }
     }
@@ -106,7 +107,6 @@ public class VMManager {
             List<VMDisk> disksList = new ArrayList<VMDisk>(disks.keySet());
             DomainXMLBuilder builder = new DomainXMLBuilder(uuid, name, cpus, ram, ramUnit, disksList, networkInterfaces, graphics, video, vmBoots);
             String xml = builder.buildXML();
-            this.conn.domainDefineXML(xml);
 
             for (VMDisk disk : disksList) {
                 if (disk.getDevice().equals("disk")) {
@@ -115,10 +115,12 @@ public class VMManager {
                     }
                 }
             }
+            
+            this.conn.domainDefineXML(xml);
 
             return new VMDomain(this.conn, name);
         } catch (ParserConfigurationException | TransformerException | LibvirtException | DomainLookupException  |
-        DirectoryNotFoundException | FileAlreadyExistsException e) {
+        DiskCreateException | DirectoryNotFoundException | FileAlreadyExistsException e) {
             throw new DomainCreateException(e);
         }
     }
