@@ -45,6 +45,8 @@ import net.asaken1021.vmmanager.util.common.vm.networkinterface.InterfaceType;
 import net.asaken1021.vmmanager.util.common.vm.video.VideoType;
 import net.asaken1021.vmmanager.util.webapi.BadRequestException;
 import net.asaken1021.vmmanager.util.webapi.IsoImagesNotSpecifiedException;
+import net.asaken1021.vmmanager.util.webapi.JSONObjectParser;
+import net.asaken1021.vmmanager.util.webapi.JSONParseException;
 
 public class WebApiApp {
     private VMManager vmm;
@@ -171,6 +173,16 @@ public class WebApiApp {
             nestedDatas.add(nestedData);
         }
         vm.put("interfaces", nestedDatas);
+
+        nestedDatas = new ArrayList<Map<String, Object>>();
+        for (VMBoot boot : vmDomain.getVmBoots()) {
+            nestedData = new LinkedHashMap<String, Object>();
+
+            nestedData.put("dev", boot.getDev());
+
+            nestedDatas.add(nestedData);
+        }
+        vm.put("boot_order", nestedDatas);
 
         data.put("vm", vm);
 
@@ -481,178 +493,74 @@ public class WebApiApp {
         List<VMBoot> vmBoots = new ArrayList<VMBoot>();
 
         VMDomain domain;
-
-        Object vm = request.get("vm");
-        Object tmp;
-        if (vm instanceof Map<?, ?>) {
-            Map<?, ?> vmMap = (Map<?, ?>) vm;
-
-            tmp = vmMap.get("name");
-            if (tmp instanceof String) {
-                vmName = (String) tmp;
-            }
-
-            tmp = vmMap.get("cpus");
-            if (tmp instanceof Integer) {
-                vmCpus = (Integer) tmp;
-            }
-
-            tmp = vmMap.get("ram");
-            if (tmp instanceof Integer) {
-                vmRam = ((Integer) tmp).longValue();
-            }
-
-            tmp = vmMap.get("ram_unit");
-            if (tmp instanceof String) {
-                try {
-                    ramUnit = VMRamUnit.getUnitByString((String) tmp);
-                } catch (TypeNotFoundException e) {
-                    response.setStatus(400);
-                    putError(data, e);
-                    return data;
-                }
-            }
-
-            tmp = vmMap.get("disks");
-            if (tmp instanceof List<?>) {
-                for (Object diskList : (List<?>) tmp) {
-                    if (diskList instanceof Map<?, ?>) {
-                        Map<?, ?> diskMap = (Map<?, ?>) diskList;
-                        Object diskData;
-                        String filePath = "";
-                        String fileType = "";
-                        String diskType = "";
-                        String diskDev = "";
-                        String diskBus = "";
-                        int diskSize = 0;
-
-                        diskData = diskMap.get("file_path");
-                        if (diskData instanceof String) {
-                            filePath = (String) diskData;
-                        }
-
-                        try {
-                            String canonicalPath = new File(filePath).getCanonicalPath();
-                            if (!canonicalPath.startsWith(this.diskImagesPath) && !canonicalPath.startsWith(this.isoImagesPath)) {
-                                response.setStatus(400);
-                                putError(data, new BadRequestException());
-                                return data;
-                            }
-                        } catch (IOException e) {
-                            response.setStatus(500);
-                            putError(data, e);
-                            return data;
-                        }
-
-                        diskData = diskMap.get("device");
-                        if (diskData instanceof String) {
-                            diskType = (String) diskData;
-                            if (diskType.equals("disk")) {
-                                fileType = "qcow2";
-                            } else if (diskType.equals("cdrom")) {
-                                fileType = "raw";
-                            } else {
-                                fileType = "";
-                            }
-                        }
-
-                        diskData = diskMap.get("target_dev");
-                        if (diskData instanceof String) {
-                            diskDev = (String) diskData;
-                        }
-
-                        diskData = diskMap.get("target_bus");
-                        if (diskData instanceof String) {
-                            diskBus = (String) diskData;
-                        }
-
-                        diskData = diskMap.get("size");
-                        if (diskData instanceof Integer) {
-                            diskSize = ((Integer)diskData).intValue();
-                        }
-
-                        try {
-                            vmDisks.put(new VMDisk(diskType, "file", "qemu", fileType, filePath, diskDev, diskBus), diskSize);
-                        } catch (FileNotFoundException e) {
-                            response.setStatus(400);
-                            putError(data, e);
-                            return data;
-                        }
-                    }
-                }
-            }
-
-            tmp = vmMap.get("interfaces");
-            if (tmp instanceof List<?>) {
-                for (Object ifaceList : (List<?>) tmp) {
-                    if (ifaceList instanceof Map<?, ?>) {
-                        Map<?, ?> ifaceMap = (Map<?, ?>) ifaceList;
-                        Object ifaceData;
-                        String macAddress = "";
-                        String source = "";
-                        String model = "";
-                        String type = "";
-
-                        ifaceData = ifaceMap.get("mac_address");
-                        if (ifaceData instanceof String) {
-                            macAddress = (String) ifaceData;
-                        }
-
-                        ifaceData = ifaceMap.get("type");
-                        if (ifaceData instanceof String) {
-                            type = (String) ifaceData;
-                        }
-
-                        ifaceData = ifaceMap.get("source");
-                        if (ifaceData instanceof String) {
-                            source = (String) ifaceData;
-                        }
-
-                        ifaceData = ifaceMap.get("model");
-                        if (ifaceData instanceof String) {
-                            model = (String) ifaceData;
-                        }
-
-                        try {
-                            vmNetworkInterfaces.add(new VMNetworkInterface(macAddress, source, model, InterfaceType.getTypeByString(type), this.vmm));
-                        } catch (InterfaceNotFoundException | TypeNotFoundException e) {
-                            response.setStatus(400);
-                            putError(data, e);
-                            return data;
-                        }
-                    }
-                }
-            }
-
-            tmp = vmMap.get("boot_order");
-            if (tmp instanceof List<?>) {
-                for (Object bootList : (List<?>) tmp) {
-                    if (bootList instanceof Map<?, ?>) {
-                        Map<?, ?> bootMap = (Map<?, ?>) bootList;
-                        Object bootData;
-                        String bootDev = "";
-
-                        bootData = bootMap.get("dev");
-                        if (bootData instanceof String) {
-                            bootDev = (String) bootData;
-                        }
-
-                        vmBoots.add(new VMBoot(bootDev, true));
-                    }
-                }
-            }
-        }
-
-        vmVideo = new VMVideo(VideoType.VIDEO_VIRTIO);
-        vmGraphics = new VMGraphics("vnc", -1);
-
+        
         try {
+            Map<?, ?> vmMap = JSONObjectParser.parseMap(request, "vm");
+            vmName = JSONObjectParser.parseString(vmMap, "name");
+            vmCpus = JSONObjectParser.parseInteger(vmMap, "cpus").intValue();
+            vmRam = JSONObjectParser.parseInteger(vmMap, "ram").longValue();
+            ramUnit = VMRamUnit.getUnitByString(JSONObjectParser.parseString(vmMap, "ram_unit"));
+
+            for (Object diskObject : JSONObjectParser.parseList(vmMap, "disks", true)) {
+                if (diskObject instanceof Map<?, ?>) {
+                    Map<?, ?> diskMap = (Map<?, ?>) diskObject;
+
+                    String filePath = JSONObjectParser.parseString(diskMap, "file_path");
+                    String diskType = JSONObjectParser.parseString(diskMap, "device");
+                    String fileType;
+                    if (diskType.equals("disk")) {
+                        fileType = "qcow2";
+                    } else if (diskType.equals("cdrom")) {
+                        fileType = "raw";
+                    } else {
+                        fileType = "";
+                    }
+
+                    String diskDev = JSONObjectParser.parseString(diskMap, "target_dev");
+                    String diskBus = JSONObjectParser.parseString(diskMap, "target_bus");
+                    int diskSize;
+                    if (diskMap.containsKey("size")) {
+                        diskSize = JSONObjectParser.parseInteger(diskMap, "size").intValue();
+                    } else {
+                        diskSize = 0;
+                    }
+
+                    vmDisks.put(new VMDisk(diskType, "file", "qemu", fileType, filePath, diskDev, diskBus), diskSize);
+                }
+            }
+
+            for (Object ifaceObject : JSONObjectParser.parseList(vmMap, "interfaces", true)) {
+                if (ifaceObject instanceof Map<?, ?>) {
+                    Map<?, ?> ifaceMap = (Map<?, ?>) ifaceObject;
+
+                    String macAddress = JSONObjectParser.parseString(ifaceMap, "mac_address");
+                    String type = JSONObjectParser.parseString(ifaceMap, "type");
+                    String source = JSONObjectParser.parseString(ifaceMap, "source");
+                    String model = JSONObjectParser.parseString(ifaceMap, "model");
+
+                    vmNetworkInterfaces.add(new VMNetworkInterface(macAddress, source, model, InterfaceType.getTypeByString(type), this.vmm));
+                }
+            }
+
+            for (Object bootObject : JSONObjectParser.parseList(vmMap, "boot_order", true)) {
+                if (bootObject instanceof Map<?, ?>) {
+                    Map<?, ?> bootMap = (Map<?, ?>) bootObject;
+
+                    String bootDev = JSONObjectParser.parseString(bootMap, "dev");
+
+                    vmBoots.add(new VMBoot(bootDev, true));
+                }
+            }
+
+            vmVideo = new VMVideo(VideoType.VIDEO_VIRTIO);
+            vmGraphics = new VMGraphics("vnc", -1);
+
             if (uuid.isEmpty()) {
                 domain = this.vmm.createVm(vmName, vmCpus, vmRam, ramUnit, vmDisks, vmNetworkInterfaces, vmGraphics, vmVideo, vmBoots);
             } else {
                 domain = this.vmm.createVm(UUID.fromString(uuid), vmName, vmCpus, vmRam, ramUnit, vmDisks, vmNetworkInterfaces, vmGraphics, vmVideo, vmBoots);
             }
-        } catch (DomainCreateException e) {
+        } catch (JSONParseException | TypeNotFoundException | FileNotFoundException | InterfaceNotFoundException | DomainCreateException e) {
             response.setStatus(400);
             putError(data, e);
             return data;
