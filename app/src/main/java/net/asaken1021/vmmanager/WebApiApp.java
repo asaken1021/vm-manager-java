@@ -21,32 +21,9 @@ import flak.annotations.Put;
 import flak.annotations.Route;
 import flak.jackson.JSON;
 
-import net.asaken1021.vmmanager.util.ConnectException;
-import net.asaken1021.vmmanager.util.DomainCreateException;
-import net.asaken1021.vmmanager.util.DomainDeleteException;
-import net.asaken1021.vmmanager.util.DomainLookupException;
-import net.asaken1021.vmmanager.util.DomainNotRunningException;
-import net.asaken1021.vmmanager.util.DomainPowerState;
-import net.asaken1021.vmmanager.util.DomainStartException;
-import net.asaken1021.vmmanager.util.DomainStopException;
-import net.asaken1021.vmmanager.util.FileNotFoundException;
-import net.asaken1021.vmmanager.util.InterfaceNotFoundException;
-import net.asaken1021.vmmanager.util.InvalidPowerStateException;
-import net.asaken1021.vmmanager.util.TypeNotFoundException;
-import net.asaken1021.vmmanager.util.VMManager;
-import net.asaken1021.vmmanager.util.common.vm.VMBoot;
-import net.asaken1021.vmmanager.util.common.vm.VMDisk;
-import net.asaken1021.vmmanager.util.common.vm.VMDomain;
-import net.asaken1021.vmmanager.util.common.vm.VMGraphics;
-import net.asaken1021.vmmanager.util.common.vm.VMNetworkInterface;
-import net.asaken1021.vmmanager.util.common.vm.VMRamUnit;
-import net.asaken1021.vmmanager.util.common.vm.VMVideo;
-import net.asaken1021.vmmanager.util.common.vm.networkinterface.InterfaceType;
-import net.asaken1021.vmmanager.util.common.vm.video.VideoType;
-import net.asaken1021.vmmanager.util.webapi.BadRequestException;
-import net.asaken1021.vmmanager.util.webapi.IsoImagesNotSpecifiedException;
-import net.asaken1021.vmmanager.util.webapi.JSONObjectParser;
-import net.asaken1021.vmmanager.util.webapi.JSONParseException;
+import net.asaken1021.vmmanager.util.*;
+import net.asaken1021.vmmanager.util.vm.*;
+import net.asaken1021.vmmanager.util.webapi.*;
 
 public class WebApiApp {
     private VMManager vmm;
@@ -538,7 +515,7 @@ public class WebApiApp {
                     String source = JSONObjectParser.parseString(ifaceMap, "source");
                     String model = JSONObjectParser.parseString(ifaceMap, "model");
 
-                    vmNetworkInterfaces.add(new VMNetworkInterface(macAddress, source, model, InterfaceType.getTypeByString(type), this.vmm));
+                    vmNetworkInterfaces.add(new VMNetworkInterface(macAddress, source, model, NetworkInterfaceType.getTypeByString(type), this.vmm));
                 }
             }
 

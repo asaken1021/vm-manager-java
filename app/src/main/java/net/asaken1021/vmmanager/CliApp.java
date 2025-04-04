@@ -8,25 +8,8 @@ import java.util.Scanner;
 
 import org.libvirt.LibvirtException;
 
-import net.asaken1021.vmmanager.util.ConnectException;
-import net.asaken1021.vmmanager.util.DomainCreateException;
-import net.asaken1021.vmmanager.util.DomainDeleteException;
-import net.asaken1021.vmmanager.util.DomainLookupException;
-import net.asaken1021.vmmanager.util.DomainStartException;
-import net.asaken1021.vmmanager.util.DomainStopException;
-import net.asaken1021.vmmanager.util.FileNotFoundException;
-import net.asaken1021.vmmanager.util.InterfaceNotFoundException;
-import net.asaken1021.vmmanager.util.TypeNotFoundException;
-import net.asaken1021.vmmanager.util.VMManager;
-import net.asaken1021.vmmanager.util.common.vm.VMBoot;
-import net.asaken1021.vmmanager.util.common.vm.VMDisk;
-import net.asaken1021.vmmanager.util.common.vm.VMDomain;
-import net.asaken1021.vmmanager.util.common.vm.VMGraphics;
-import net.asaken1021.vmmanager.util.common.vm.VMNetworkInterface;
-import net.asaken1021.vmmanager.util.common.vm.VMRamUnit;
-import net.asaken1021.vmmanager.util.common.vm.VMVideo;
-import net.asaken1021.vmmanager.util.common.vm.networkinterface.InterfaceType;
-import net.asaken1021.vmmanager.util.common.vm.video.VideoType;
+import net.asaken1021.vmmanager.util.*;
+import net.asaken1021.vmmanager.util.vm.*;
 
 public class CliApp {
     private VMManager vmm;
@@ -262,7 +245,7 @@ public class CliApp {
                 macAddress = "";
             }
 
-            vmNetworkInterfaces.add(new VMNetworkInterface(macAddress, source, model, InterfaceType.getTypeByString(type), vmm));
+            vmNetworkInterfaces.add(new VMNetworkInterface(macAddress, source, model, NetworkInterfaceType.getTypeByString(type), vmm));
 
             System.out.print("- さらにインターフェイスを追加しますか? [y/n] > ");
             select = scanner.next();
