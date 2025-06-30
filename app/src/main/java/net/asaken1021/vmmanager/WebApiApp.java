@@ -585,6 +585,7 @@ public class WebApiApp {
     private Response addAccessControlAllowMethods(Response response) {
         if (!response.hasResponseHeader("Access-Control-Allow-Methods")) {
             response.addHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE");
+            response.addHeader("Access-Control-Allow-Headers", "Content-Type");
         }
 
         return response;
