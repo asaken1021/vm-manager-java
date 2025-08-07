@@ -38,6 +38,10 @@ dependencies {
     implementation 'com.github.pcdv.flak:flak-api:2.8.0'
     implementation 'com.github.pcdv.flak:flak-backend-jdk:2.8.0'
     implementation 'com.github.pcdv.flak:flak-jackson:2.8.0'
+    implementation 'jakarta.websocket:jakarta.websocket-api:2.2.0'
+    implementation 'org.eclipse.jetty:jetty-server:11.0.25'
+    implementation 'org.eclipse.jetty:jetty-servlet:11.0.25'
+    implementation 'org.eclipse.jetty.websocket:websocket-jakarta-server:11.0.25'
 }
 
 // Apply a specific Java toolchain to ease working on different environments.

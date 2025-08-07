@@ -20,6 +20,11 @@ import flak.annotations.Post;
 import flak.annotations.Put;
 import flak.annotations.Route;
 import flak.jackson.JSON;
+import jakarta.websocket.server.ServerEndpointConfig;
+import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.ServerConnector;
+import org.eclipse.jetty.servlet.ServletContextHandler;
+import org.eclipse.jetty.websocket.jakarta.server.config.JakartaWebSocketServletContainerInitializer;
 
 import net.asaken1021.vmmanager.util.*;
 import net.asaken1021.vmmanager.util.vm.*;
@@ -59,8 +64,31 @@ public class WebApiApp {
             this.webApp = Flak.createHttpApp(8080);
             webApp.scan(new WebApiApp(this.vmm, this.diskImagesPath, this.isoImagesPath, this.allowOrigin));
             webApp.start();
-        } catch (IllegalAccessException | InstantiationException | ClassNotFoundException | IOException e) {
-            printError(e.getLocalizedMessage());
+
+            Server webSocketServer = new Server();
+            ServerConnector connector = new ServerConnector(webSocketServer);
+            connector.setPort(8081);
+            webSocketServer.addConnector(connector);
+
+            ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
+            context.setContextPath("/");
+            webSocketServer.setHandler(context);
+
+            JakartaWebSocketServletContainerInitializer.configure(context, (servletContext, webSocketContainer) -> {
+                VncProxyConfigurator vncProxyConfigurator = new VncProxyConfigurator(this.uri);
+                ServerEndpointConfig config = ServerEndpointConfig.Builder
+                    .create(VncProxyEndpoint.class, "/vnc/{vmUuid}")
+                    .configurator(vncProxyConfigurator)
+                    .build();
+
+                webSocketContainer.addEndpoint(config);
+            });
+
+            webSocketServer.start();
+            System.out.println("VNC Proxy WebSocket Server started.");
+            webSocketServer.join();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
@@ -80,13 +108,14 @@ public class WebApiApp {
         List<Map<String, Object>> vms = new ArrayList<Map<String, Object>>();
         Map<String, Object> vm = new LinkedHashMap<String, Object>();
 
-        response = addAccessControlAllowOrigin(response);
+        response = addCrossOriginResponse(response);
 
         try {
             for (String name : this.vmm.getVmNames()) {
                 vm = new HashMap<String, Object>();
                 vm.put("uuid", this.vmm.getVm(name).getVmUUID().toString());
                 vm.put("name", name);
+                vm.put("state", this.vmm.getVm(name).getVmPowerState().getStateText());
                 vms.add(vm);
             }
             data.put("vms", vms);
@@ -107,7 +136,7 @@ public class WebApiApp {
         Map<String, Object> nestedData = new LinkedHashMap<String, Object>();
         VMDomain vmDomain;
 
-        response = addAccessControlAllowOrigin(response);
+        response = addCrossOriginResponse(response);
 
         try {
             vmDomain = this.vmm.getVm(UUID.fromString(uuid));
@@ -172,7 +201,7 @@ public class WebApiApp {
         Map<String, Object> data = new HashMap<String, Object>();
         List<String> fileNames = new ArrayList<String>();
 
-        response = addAccessControlAllowOrigin(response);
+        response = addCrossOriginResponse(response);
 
         if (this.isoImagesPath.isEmpty()) {
             response.setStatus(500);
@@ -203,7 +232,7 @@ public class WebApiApp {
         Map<String, Object> data = new HashMap<String, Object>();
         List<String> folderNames = new ArrayList<String>();
 
-        response = addAccessControlAllowOrigin(response);
+        response = addCrossOriginResponse(response);
 
         if (this.isoImagesPath.isEmpty()) {
             response.setStatus(500);
@@ -234,7 +263,7 @@ public class WebApiApp {
         Map<String, Object> data = new HashMap<String, Object>();
         List<String> fileNames = new ArrayList<String>();
 
-        response = addAccessControlAllowOrigin(response);
+        response = addCrossOriginResponse(response);
 
         if (this.isoImagesPath.isEmpty()) {
             response.setStatus(500);
@@ -275,7 +304,7 @@ public class WebApiApp {
     public Map<String, Object> createVm(Map<String, Object> request, Response response) {
         Map<String, Object> data = new LinkedHashMap<String, Object>();
 
-        response = addAccessControlAllowOrigin(response);
+        response = addCrossOriginResponse(response);
         
         data = createVMIntr(request, "", response);
         
@@ -288,7 +317,7 @@ public class WebApiApp {
     public Map<String, Object> modifyVm(Map<String, Object> request, String uuid, Response response) {
         Map<String, Object> data = new HashMap<String, Object>();
 
-        response = addAccessControlAllowOrigin(response);
+        response = addCrossOriginResponse(response);
 
         data = deleteVMIntr(uuid, response);
 
@@ -307,7 +336,7 @@ public class WebApiApp {
     public Map<String, Object> deleteVm(String uuid, Response response) {
         Map<String, Object> data = new LinkedHashMap<String, Object>();
 
-        response = addAccessControlAllowOrigin(response);
+        response = addCrossOriginResponse(response);
 
         data = deleteVMIntr(uuid, response);
 
@@ -320,7 +349,7 @@ public class WebApiApp {
         Map<String, Object> data = new LinkedHashMap<String, Object>();
         VMDomain vmDomain;
 
-        response = addAccessControlAllowOrigin(response);
+        response = addCrossOriginResponse(response);
 
         try {
             vmDomain = this.vmm.getVm(UUID.fromString(uuid));
@@ -345,7 +374,7 @@ public class WebApiApp {
         String stateString = "";
         UUID vmUUID;
 
-        response = addAccessControlAllowOrigin(response);
+        response = addCrossOriginResponse(response);
 
         if (state instanceof String) {
             stateString = (String) state;
@@ -386,7 +415,7 @@ public class WebApiApp {
         Map<String, Object> data = new HashMap<String, Object>();
         VMDomain domain;
 
-        response = addAccessControlAllowOrigin(response);
+        response = addCrossOriginResponse(response);
 
         try {
             domain = this.vmm.getVm(UUID.fromString(uuid));
@@ -411,50 +440,43 @@ public class WebApiApp {
     @Route("/vms")
     @Options
     public void vmsOptions(Response response) {
-        response = addAccessControlAllowOrigin(response);
-        response = addAccessControlAllowMethods(response);
+        response = addCrossOriginResponse(response);
     }
 
     @Route("/vms/:uuid")
     @Options
     public void vmsUUIDOptions(String uuid, Response response) {
-        response = addAccessControlAllowOrigin(response);
-        response = addAccessControlAllowMethods(response);
+        response = addCrossOriginResponse(response);
     }
 
     @Route("/vms/:uuid/state")
     @Options
     public void vmsUUIDStateOptions(String uuid, Response response) {
-        response = addAccessControlAllowOrigin(response);
-        response = addAccessControlAllowMethods(response);
+        response = addCrossOriginResponse(response);
     }
 
     @Route("/vms/:uuid/vnc")
     @Options
     public void vmsUUIDVncOptions(String uuid, Response response) {
-        response = addAccessControlAllowOrigin(response);
-        response = addAccessControlAllowMethods(response);
+        response = addCrossOriginResponse(response);
     }
 
     @Route("/isoimages")
     @Options
     public void isoImagesOptions(Response response) {
-        response = addAccessControlAllowOrigin(response);
-        response = addAccessControlAllowMethods(response);
+        response = addCrossOriginResponse(response);
     }
 
     @Route("/isoimages/folders")
     @Options
     public void isoImagesFoldersOptions(Response response) {
-        response = addAccessControlAllowOrigin(response);
-        response = addAccessControlAllowMethods(response);
+        response = addCrossOriginResponse(response);
     }
 
     @Route("/isoimages/files/*folder")
     @Options
     public void isoImagesFilesFolderOptions(String folder, Response response) {
-        response = addAccessControlAllowOrigin(response);
-        response = addAccessControlAllowMethods(response);
+        response = addCrossOriginResponse(response);
     }
     
     private Map<String, Object> createVMIntr(Map<String, Object> request, String uuid, Response response) {
@@ -574,17 +596,14 @@ public class WebApiApp {
         return data;
     }
 
-    private Response addAccessControlAllowOrigin(Response response) {
+    private Response addCrossOriginResponse(Response response) {
         if (!response.hasResponseHeader("Access-Control-Allow-Origin")) {
             response.addHeader("Access-Control-Allow-Origin", this.allowOrigin);
         }
-
-        return response;
-    }
-
-    private Response addAccessControlAllowMethods(Response response) {
         if (!response.hasResponseHeader("Access-Control-Allow-Methods")) {
             response.addHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE");
+        }
+        if (!response.hasResponseHeader("Access-Control-Allow-Headers")) {
             response.addHeader("Access-Control-Allow-Headers", "Content-Type");
         }
 
