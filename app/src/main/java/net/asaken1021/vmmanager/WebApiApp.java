@@ -504,14 +504,17 @@ public class WebApiApp {
                 if (diskObject instanceof Map<?, ?>) {
                     Map<?, ?> diskMap = (Map<?, ?>) diskObject;
 
-                    String filePath = JSONObjectParser.parseString(diskMap, "file_path");
+                    String filePath;
                     String diskType = JSONObjectParser.parseString(diskMap, "device");
                     String fileType;
                     if (diskType.equals("disk")) {
+                        filePath = this.diskImagesPath + File.separatorChar + JSONObjectParser.parseString(diskMap, "file_path");
                         fileType = "qcow2";
                     } else if (diskType.equals("cdrom")) {
+                        filePath = JSONObjectParser.parseString(diskMap, "file_path");
                         fileType = "raw";
                     } else {
+                        filePath = JSONObjectParser.parseString(diskMap, "file_path");
                         fileType = "";
                     }
 
