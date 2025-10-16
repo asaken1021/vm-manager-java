@@ -8,6 +8,8 @@
   - DELETE: 渡されたUUIDのVMを削除する
 - `/vms/[UUID]/vnc`
   - GET: 渡されたUUIDのVMのVNCにアクセスできるIPアドレスとポート番号を返す
+- `/vms/[UUID]/vmfolderpath`
+  - PUT: 渡されたUUIDのVMの（フロントエンドの表示上の）フォルダ名を更新する
 - `/vms/[UUID]/state`
   - GET: 渡されたUUIDのVMの電源状態を返す
   - PUT: 渡されたUUIDのVMの電源状態を変更する

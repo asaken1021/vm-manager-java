@@ -9,7 +9,7 @@ import jakarta.xml.bind.annotation.XmlRootElement;
 @XmlAccessorType(XmlAccessType.FIELD)
 public class MetadataXML {
     @XmlElement(name="data", namespace="https://github.com/asaken1021/vm-manager-java")
-    private Data data = new Data();
+    private Data data;
 
     public Data getVmmData() {
         return this.data;

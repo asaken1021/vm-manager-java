@@ -11,7 +11,9 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
 
 import org.libvirt.Connect;
+import org.libvirt.Domain;
 import org.libvirt.LibvirtException;
+import org.libvirt.Domain.MetadataType;
 
 import net.asaken1021.vmmanager.util.vm.*;
 import net.asaken1021.vmmanager.util.xml.DomainXMLBuilder;
@@ -131,6 +133,10 @@ public class VMManager {
     throws DomainCreateException, DomainDeleteException {
         deleteVm(uuid);
         createVm(uuid, name, cpus, ram, ramUnit, disks, networkInterfaces, graphics, video, vmBoots, vmFolderPath);
+    }
+
+    public void modifyVmFolderPath(UUID uuid, String vmFolderPath) throws LibvirtException {
+        this.conn.domainLookupByUUID(uuid).setMetadata(MetadataType.ELEMENT, "<data><vm_folder_path>" + vmFolderPath + "</vm_folder_path></data>", "vmmanager", "https://github.com/asaken1021/vm-manager-java", Domain.ModificationImpact.CONFIG);
     }
 
     public void deleteVm(UUID uuid) throws DomainDeleteException {

@@ -7,7 +7,7 @@ import jakarta.xml.bind.annotation.XmlElement;
 @XmlAccessorType(XmlAccessType.FIELD)
 public class Data {
     @XmlElement(name="vm_folder_path", namespace="https://github.com/asaken1021/vm-manager-java")
-    private String vmFolderPath = "/";
+    private String vmFolderPath;
 
     public String getVmFolderPath() {
         return this.vmFolderPath;

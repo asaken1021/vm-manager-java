@@ -25,6 +25,7 @@ import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.websocket.jakarta.server.config.JakartaWebSocketServletContainerInitializer;
+import org.libvirt.LibvirtException;
 
 import net.asaken1021.vmmanager.util.*;
 import net.asaken1021.vmmanager.util.vm.*;
@@ -346,6 +347,32 @@ public class WebApiApp {
         return data;
     }
 
+    @Route("/vms/:uuid/vmfolderpath")
+    @Put
+    @JSON
+    public Map<String, Object> setVmFolderPath(String uuid, Map<String, Object> request, Response response) {
+        Map<String, Object> data = new LinkedHashMap<String, Object>();
+
+        Object vmFolderPath = request.get("vm_folder_path");
+        String vmFolderPathString = "/";
+
+        response = addCrossOriginResponse(response);
+
+        if (vmFolderPath instanceof String) {
+            vmFolderPathString = (String) vmFolderPath;
+        }
+
+        try {
+            this.vmm.modifyVmFolderPath(UUID.fromString(uuid), vmFolderPathString);
+        } catch (LibvirtException e) {
+            response.setStatus(400);
+            putError(data, e);
+            return data;
+        }
+
+        return data;
+    }
+
     @Route("/vms/:uuid/state")
     @JSON
     public Map<String, Object> getVmStateByUUID(String uuid, Response response) {
@@ -449,6 +476,12 @@ public class WebApiApp {
     @Route("/vms/:uuid")
     @Options
     public void vmsUUIDOptions(String uuid, Response response) {
+        response = addCrossOriginResponse(response);
+    }
+
+    @Route("/vms/:uuid/vmfolderpath")
+    @Options
+    public void vmsUUIDVmFolderPathOptions(String uuid, Response response) {
         response = addCrossOriginResponse(response);
     }
 
