@@ -5,7 +5,8 @@ public enum XMLType {
     TYPE_DISK("/domain/devices/disk"),
     TYPE_GRAPHICS("/domain/devices/graphics"),
     TYPE_NETWORKINTERFACE("/domain/devices/interface"),
-    TYPE_VIDEO("/domain/devices/video");
+    TYPE_VIDEO("/domain/devices/video"),
+    TYPE_METADATA("/domain/metadata");
 
     private String xPath;
 

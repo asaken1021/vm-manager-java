@@ -69,11 +69,11 @@ public class VMManager {
     }
 
     public VMDomain createVm(String name, int cpus, long ram, VMRamUnit ramUnit, LinkedHashMap<VMDisk, Integer> disks,
-    List<VMNetworkInterface> networkInterfaces, VMGraphics graphics, VMVideo video, List<VMBoot> vmBoots)
+    List<VMNetworkInterface> networkInterfaces, VMGraphics graphics, VMVideo video, List<VMBoot> vmBoots, String vmFolderPath)
     throws DomainCreateException {
         try {
             List<VMDisk> disksList = new ArrayList<VMDisk>(disks.keySet());
-            DomainXMLBuilder builder = new DomainXMLBuilder(name, cpus, ram, ramUnit, disksList, networkInterfaces, graphics, video, vmBoots);
+            DomainXMLBuilder builder = new DomainXMLBuilder(name, cpus, ram, ramUnit, disksList, networkInterfaces, graphics, video, vmBoots, vmFolderPath);
             String xml = builder.buildXML();
 
             for (VMDisk disk : disksList) {
@@ -94,11 +94,11 @@ public class VMManager {
     }
 
     public VMDomain createVm(UUID uuid, String name, int cpus, long ram, VMRamUnit ramUnit, LinkedHashMap<VMDisk, Integer> disks,
-    List<VMNetworkInterface> networkInterfaces, VMGraphics graphics, VMVideo video, List<VMBoot> vmBoots)
+    List<VMNetworkInterface> networkInterfaces, VMGraphics graphics, VMVideo video, List<VMBoot> vmBoots, String vmFolderPath)
     throws DomainCreateException {
         try {
             List<VMDisk> disksList = new ArrayList<VMDisk>(disks.keySet());
-            DomainXMLBuilder builder = new DomainXMLBuilder(uuid, name, cpus, ram, ramUnit, disksList, networkInterfaces, graphics, video, vmBoots);
+            DomainXMLBuilder builder = new DomainXMLBuilder(uuid, name, cpus, ram, ramUnit, disksList, networkInterfaces, graphics, video, vmBoots, vmFolderPath);
             String xml = builder.buildXML();
 
             for (VMDisk disk : disksList) {
@@ -127,10 +127,10 @@ public class VMManager {
     }
 
     public void modifyVm(UUID uuid, String name, int cpus, long ram, VMRamUnit ramUnit, LinkedHashMap<VMDisk, Integer> disks,
-    List<VMNetworkInterface> networkInterfaces, VMGraphics graphics, VMVideo video, List<VMBoot> vmBoots)
+    List<VMNetworkInterface> networkInterfaces, VMGraphics graphics, VMVideo video, List<VMBoot> vmBoots, String vmFolderPath)
     throws DomainCreateException, DomainDeleteException {
         deleteVm(uuid);
-        createVm(uuid, name, cpus, ram, ramUnit, disks, networkInterfaces, graphics, video, vmBoots);
+        createVm(uuid, name, cpus, ram, ramUnit, disks, networkInterfaces, graphics, video, vmBoots, vmFolderPath);
     }
 
     public void deleteVm(UUID uuid) throws DomainDeleteException {

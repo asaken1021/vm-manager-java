@@ -94,7 +94,7 @@ public class CliApp {
                         System.out.println("- 起動順序の設定");
                         vmBoots = createVmBoots(scanner);
                         
-                        domain = vmm.createVm(vmName, vmCpus, vmRam, VMRamUnit.RAM_MiB, vmDisks, vmNetworkInterfaces, vmGraphics, vmVideo, vmBoots);
+                        domain = vmm.createVm(vmName, vmCpus, vmRam, VMRamUnit.RAM_MiB, vmDisks, vmNetworkInterfaces, vmGraphics, vmVideo, vmBoots, "/");
                         System.out.println("仮想マシン " + domain.getVmName() + " を作成しました");
                         break;
                     case 2:

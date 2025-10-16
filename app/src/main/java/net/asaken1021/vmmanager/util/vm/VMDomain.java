@@ -49,6 +49,7 @@ public class VMDomain {
     private VMGraphics vmGraphics;
     private VMVideo vmVideo;
     private List<VMBoot> vmBoots;
+    private String vmFolderPath;
 
     public VMDomain(Connect conn, String name) throws DomainLookupException {
         this.conn = conn;
@@ -81,6 +82,7 @@ public class VMDomain {
         this.vmGraphics = parseVmGraphics(dom);
         this.vmVideo = parseVmVideo(dom);
         this.vmBoots = parseVmBoot(dom);
+        this.vmFolderPath = parseVmFolderPath(dom);
     }
 
     private List<VMDisk> parseVmDisks(Domain dom) throws XMLParserException {
@@ -161,6 +163,25 @@ public class VMDomain {
         }
 
         return vmBoots;
+    }
+
+    private String parseVmFolderPath(Domain dom) throws XMLParserException {
+        List<String> vmMetadataXML;
+        String vmFolderPath;
+
+        try {
+            vmMetadataXML = parseXMLNodes(dom.getXMLDesc(0), XMLType.TYPE_METADATA);
+
+            if (vmMetadataXML.size() != 1) {
+                return null;
+            } else {
+                vmFolderPath = new VMFolderPath(vmMetadataXML.get(0)).getVmFolderPath();
+            }
+        } catch (LibvirtException | JAXBException e) {
+            throw new XMLParserException(e);
+        }
+
+        return vmFolderPath;
     }
 
     private List<String> parseXMLNodes(String xmlDesc, XMLType xmlType) throws XMLParserException {
@@ -317,5 +338,9 @@ public class VMDomain {
         }
 
         return addresses;
+    }
+
+    public String getVmFolderPath() {
+        return this.vmFolderPath;
     }
 }

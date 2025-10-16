@@ -8,6 +8,7 @@ import jakarta.xml.bind.Unmarshaller;
 import net.asaken1021.vmmanager.util.xml.annotation.boot.BootXML;
 import net.asaken1021.vmmanager.util.xml.annotation.disk.DiskXML;
 import net.asaken1021.vmmanager.util.xml.annotation.graphics.GraphicsXML;
+import net.asaken1021.vmmanager.util.xml.annotation.metadata.MetadataXML;
 import net.asaken1021.vmmanager.util.xml.annotation.networkinterface.NetworkInterfaceXML;
 import net.asaken1021.vmmanager.util.xml.annotation.video.VideoXML;
 
@@ -36,6 +37,10 @@ public class DomainXMLParser {
                 break;
             case XMLType.TYPE_VIDEO:
                 this.jaxbContext = JAXBContext.newInstance(VideoXML.class);
+                break;
+            case XMLType.TYPE_METADATA:
+                this.jaxbContext = JAXBContext.newInstance(MetadataXML.class);
+                break;
             default:
                 break;
         }
@@ -60,5 +65,9 @@ public class DomainXMLParser {
 
     public VideoXML parseVideoXML() throws JAXBException {
         return (VideoXML)unmarshaller.unmarshal(new StringReader(this.xmlDesc));
+    }
+
+    public MetadataXML parseMetadataXML() throws JAXBException {
+        return (MetadataXML)unmarshaller.unmarshal(new StringReader(this.xmlDesc));
     }
 }

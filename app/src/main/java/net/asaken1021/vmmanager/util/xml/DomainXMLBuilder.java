@@ -23,6 +23,8 @@ import org.w3c.dom.Element;
 import net.asaken1021.vmmanager.util.vm.*;
 
 public class DomainXMLBuilder {
+    private static final String NAMESPACE_URI = "https://github.com/asaken1021/vm-manager-java";
+    private static final String NAMESPACE_PREFIX = "vmmanager";
     private UUID vmUUID;
     private String vmName;
     private int vmCpus;
@@ -33,6 +35,7 @@ public class DomainXMLBuilder {
     private VMGraphics vmGraphics;
     private VMVideo vmVideo;
     private List<VMBoot> vmBoots;
+    private String vmFolderPath;
 
     private DocumentBuilderFactory factory;
     private DocumentBuilder builder;
@@ -41,7 +44,7 @@ public class DomainXMLBuilder {
     private Transformer transformer;
 
     public DomainXMLBuilder(String vmName, int vmCpus, long vmRam, VMRamUnit ramUnit, List<VMDisk> vmDisks,
-    List<VMNetworkInterface> vmNetworkInterfaces, VMGraphics vmGraphics, VMVideo vmVideo, List<VMBoot> vmBoots)
+    List<VMNetworkInterface> vmNetworkInterfaces, VMGraphics vmGraphics, VMVideo vmVideo, List<VMBoot> vmBoots, String vmFolderPath)
     throws ParserConfigurationException, TransformerConfigurationException {
         this.vmUUID = null;
         this.vmName = vmName;
@@ -53,6 +56,7 @@ public class DomainXMLBuilder {
         this.vmGraphics = vmGraphics;
         this.vmVideo = vmVideo;
         this.vmBoots = vmBoots;
+        this.vmFolderPath = vmFolderPath;
 
         this.factory = DocumentBuilderFactory.newInstance();
         this.builder = this.factory.newDocumentBuilder();
@@ -62,9 +66,9 @@ public class DomainXMLBuilder {
     }
     
     public DomainXMLBuilder(UUID uuid, String vmName, int vmCpus, long vmRam, VMRamUnit ramUnit, List<VMDisk> vmDisks,
-    List<VMNetworkInterface> vmNetworkInterfaces, VMGraphics vmGraphics, VMVideo vmVideo, List<VMBoot> vmBoots)
+    List<VMNetworkInterface> vmNetworkInterfaces, VMGraphics vmGraphics, VMVideo vmVideo, List<VMBoot> vmBoots, String vmFolderPath)
     throws ParserConfigurationException, TransformerConfigurationException {
-        this(vmName, vmCpus, vmRam, ramUnit, vmDisks, vmNetworkInterfaces, vmGraphics, vmVideo, vmBoots);
+        this(vmName, vmCpus, vmRam, ramUnit, vmDisks, vmNetworkInterfaces, vmGraphics, vmVideo, vmBoots, vmFolderPath);
         this.vmUUID = uuid;
     }
 
@@ -99,6 +103,15 @@ public class DomainXMLBuilder {
         Element name = this.document.createElement("name");
         name.appendChild(this.document.createTextNode(this.vmName));
         domain.appendChild(name);
+
+        Element metadata = this.document.createElement("metadata");
+        metadata.setAttribute("xmlns:" + NAMESPACE_PREFIX, NAMESPACE_URI);
+        Element vmmData = this.document.createElementNS(NAMESPACE_URI, NAMESPACE_PREFIX + ":data");
+        Element vmFolderPathElement = this.document.createElementNS(NAMESPACE_URI, NAMESPACE_PREFIX + ":vm_folder_path");
+        vmFolderPathElement.appendChild(this.document.createTextNode(this.vmFolderPath));
+        vmmData.appendChild(vmFolderPathElement);
+        metadata.appendChild(vmmData);
+        domain.appendChild(metadata);
 
         Element vcpu = this.document.createElement("vcpu");
         vcpu.setAttribute("placement", "static");

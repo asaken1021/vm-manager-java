@@ -112,10 +112,12 @@ public class WebApiApp {
 
         try {
             for (String name : this.vmm.getVmNames()) {
+                VMDomain vmDomain = this.vmm.getVm(name);
                 vm = new HashMap<String, Object>();
-                vm.put("uuid", this.vmm.getVm(name).getVmUUID().toString());
-                vm.put("name", name);
-                vm.put("state", this.vmm.getVm(name).getVmPowerState().getStateText());
+                vm.put("uuid", vmDomain.getVmUUID().toString());
+                vm.put("name", vmDomain.getVmName());
+                vm.put("vm_folder_path", vmDomain.getVmFolderPath());
+                vm.put("state", vmDomain.getVmPowerState().getStateText());
                 vms.add(vm);
             }
             data.put("vms", vms);
@@ -148,6 +150,7 @@ public class WebApiApp {
 
         vm.put("uuid", vmDomain.getVmUUID().toString());
         vm.put("name", vmDomain.getVmName());
+        vm.put("vm_folder_path", vmDomain.getVmFolderPath());
         vm.put("state", vmDomain.getVmPowerState().getStateText());
         vm.put("cpus", vmDomain.getVmCpus());
         vm.put("ram", vmDomain.getVmRamSize(VMRamUnit.RAM_MiB));
@@ -490,6 +493,7 @@ public class WebApiApp {
         VMGraphics vmGraphics;
         VMVideo vmVideo;
         List<VMBoot> vmBoots = new ArrayList<VMBoot>();
+        String vmFolderPath = "";
 
         VMDomain domain;
         
@@ -499,6 +503,7 @@ public class WebApiApp {
             vmCpus = JSONObjectParser.parseInteger(vmMap, "cpus").intValue();
             vmRam = JSONObjectParser.parseInteger(vmMap, "ram").longValue();
             ramUnit = VMRamUnit.getUnitByString(JSONObjectParser.parseString(vmMap, "ram_unit"));
+            vmFolderPath = JSONObjectParser.parseString(vmMap, "vm_folder_path");
 
             for (Object diskObject : JSONObjectParser.parseList(vmMap, "disks", true)) {
                 if (diskObject instanceof Map<?, ?>) {
@@ -558,9 +563,9 @@ public class WebApiApp {
             vmGraphics = new VMGraphics("vnc", -1);
 
             if (uuid.isEmpty()) {
-                domain = this.vmm.createVm(vmName, vmCpus, vmRam, ramUnit, vmDisks, vmNetworkInterfaces, vmGraphics, vmVideo, vmBoots);
+                domain = this.vmm.createVm(vmName, vmCpus, vmRam, ramUnit, vmDisks, vmNetworkInterfaces, vmGraphics, vmVideo, vmBoots, vmFolderPath);
             } else {
-                domain = this.vmm.createVm(UUID.fromString(uuid), vmName, vmCpus, vmRam, ramUnit, vmDisks, vmNetworkInterfaces, vmGraphics, vmVideo, vmBoots);
+                domain = this.vmm.createVm(UUID.fromString(uuid), vmName, vmCpus, vmRam, ramUnit, vmDisks, vmNetworkInterfaces, vmGraphics, vmVideo, vmBoots, vmFolderPath);
             }
         } catch (JSONParseException | TypeNotFoundException | FileNotFoundException | InterfaceNotFoundException | DomainCreateException e) {
             response.setStatus(400);
