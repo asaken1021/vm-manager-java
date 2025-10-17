@@ -364,7 +364,7 @@ public class WebApiApp {
 
         try {
             this.vmm.modifyVmFolderPath(UUID.fromString(uuid), vmFolderPathString);
-        } catch (LibvirtException e) {
+        } catch (LibvirtException | DomainLookupException e) {
             response.setStatus(400);
             putError(data, e);
             return data;

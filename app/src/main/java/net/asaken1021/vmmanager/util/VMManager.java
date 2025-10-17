@@ -135,8 +135,11 @@ public class VMManager {
         createVm(uuid, name, cpus, ram, ramUnit, disks, networkInterfaces, graphics, video, vmBoots, vmFolderPath);
     }
 
-    public void modifyVmFolderPath(UUID uuid, String vmFolderPath) throws LibvirtException {
+    public void modifyVmFolderPath(UUID uuid, String vmFolderPath) throws LibvirtException, DomainLookupException {
         this.conn.domainLookupByUUID(uuid).setMetadata(MetadataType.ELEMENT, "<data><vm_folder_path>" + vmFolderPath + "</vm_folder_path></data>", "vmmanager", "https://github.com/asaken1021/vm-manager-java", Domain.ModificationImpact.CONFIG);
+        if (getVm(uuid).getVmPowerState().equals(DomainPowerState.POWER_RUNNING)) {
+            this.conn.domainLookupByUUID(uuid).setMetadata(MetadataType.ELEMENT, "<data><vm_folder_path>" + vmFolderPath + "</vm_folder_path></data>", "vmmanager", "https://github.com/asaken1021/vm-manager-java", Domain.ModificationImpact.LIVE);
+        }
     }
 
     public void deleteVm(UUID uuid) throws DomainDeleteException {
