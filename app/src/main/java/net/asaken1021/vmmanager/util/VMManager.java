@@ -17,6 +17,7 @@ import org.libvirt.Domain.MetadataType;
 
 import net.asaken1021.vmmanager.util.vm.*;
 import net.asaken1021.vmmanager.util.xml.DomainXMLBuilder;
+import net.asaken1021.vmmanager.util.xml.XMLParserException;
 
 public class VMManager {
     private Connect conn;
@@ -90,7 +91,7 @@ public class VMManager {
 
             return new VMDomain(this.conn, name);
         } catch (ParserConfigurationException | TransformerException | LibvirtException | DomainLookupException |
-        DiskCreateException | DirectoryNotFoundException | FileAlreadyExistsException e) {
+        DiskCreateException | DirectoryNotFoundException | FileAlreadyExistsException | XMLParserException e) {
             throw new DomainCreateException(e);
         }
     }
@@ -115,7 +116,7 @@ public class VMManager {
 
             return new VMDomain(this.conn, name);
         } catch (ParserConfigurationException | TransformerException | LibvirtException | DomainLookupException  |
-        DiskCreateException | DirectoryNotFoundException | FileAlreadyExistsException e) {
+        DiskCreateException | DirectoryNotFoundException | FileAlreadyExistsException | XMLParserException e) {
             throw new DomainCreateException(e);
         }
     }

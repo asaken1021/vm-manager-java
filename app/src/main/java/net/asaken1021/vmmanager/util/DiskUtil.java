@@ -3,10 +3,15 @@ package net.asaken1021.vmmanager.util;
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.List;
 
 import org.libvirt.Connect;
 import org.libvirt.LibvirtException;
 import org.libvirt.StoragePool;
+
+import net.asaken1021.vmmanager.util.xml.StorageVolXMLParser;
+import net.asaken1021.vmmanager.util.xml.XMLParserException;
 
 public class DiskUtil {
     private Connect conn;
@@ -17,7 +22,8 @@ public class DiskUtil {
     }
 
     public void createDisk(String diskPath, int diskSizeByGB)
-    throws DiskCreateException, DirectoryNotFoundException, FileAlreadyExistsException, LibvirtException {
+    throws DiskCreateException, DirectoryNotFoundException, FileAlreadyExistsException,
+    XMLParserException, LibvirtException {
         this.diskPath = diskPath;
 
         Path dirPath = Paths.get(this.diskPath).getParent();
@@ -35,15 +41,36 @@ public class DiskUtil {
             throw new DiskCreateException();
         }
 
-        String tempStoragePoolXML = 
-            "<pool type='dir'>" +
-                "<name>temp</name>" + 
-                "<target>" + 
-                    "<path>" + dirPath.toString() + "</path>" +
-                "</target>" + 
-            "</pool>";
+        StoragePool pool;
+        String foundPoolName = "";
+        List<String>storagePoolNames = Arrays.asList(this.conn.listStoragePools());
+        storagePoolNames.addAll(Arrays.asList(this.conn.listDefinedStoragePools()));
+
+        boolean dirPathFound = false;
+
+        for (String storagePoolName : storagePoolNames) {
+            String volDirPath = new StorageVolXMLParser(this.conn.storagePoolLookupByName(storagePoolName)
+                                    .getXMLDesc(0)).getVolDirPath();
+            if (volDirPath.equals(dirPath.toString())) {
+                dirPathFound = true;
+                foundPoolName = storagePoolName;
+                break;
+            }
+        }
+
+        if (dirPathFound) {
+            pool = this.conn.storagePoolLookupByName(foundPoolName);
+        } else {
+            String tempStoragePoolXML = 
+                "<pool type='dir'>" +
+                    "<name>temp</name>" + 
+                    "<target>" + 
+                        "<path>" + dirPath.toString() + "</path>" +
+                    "</target>" + 
+                "</pool>";
         
-        StoragePool pool = this.conn.storagePoolCreateXML(tempStoragePoolXML, 0);
+            pool = this.conn.storagePoolCreateXML(tempStoragePoolXML, 0);
+        }
 
         String tempStorageVolXML = 
             "<volume>" + 
